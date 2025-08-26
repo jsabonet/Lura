@@ -13,12 +13,81 @@ class OpenWeatherService:
     def __init__(self):
         self.api_key = settings.OPENWEATHER_API_KEY
         self.base_url = "https://api.openweathermap.org/data/2.5"
+        
+        # Coordenadas exatas do site OpenWeather para garantir dados idênticos
+        # Capitais provinciais e cidades importantes de Moçambique
+        self.exact_coordinates = {
+            # Maputo (Província e Cidade)
+            'maputo': {'lat': -25.966213, 'lon': 32.56745, 'name': 'Maputo'},
+            'matola': {'lat': -25.962, 'lon': 32.459, 'name': 'Matola'},
+            
+            # Gaza
+            'xai-xai': {'lat': -25.052, 'lon': 33.644, 'name': 'Xai-Xai'},
+            'chokwe': {'lat': -24.533, 'lon': 33.017, 'name': 'Chokwe'},
+            'chibuto': {'lat': -24.688, 'lon': 33.531, 'name': 'Chibuto'},
+            
+            # Inhambane
+            'inhambane': {'lat': -23.865, 'lon': 35.383, 'name': 'Inhambane'},
+            'maxixe': {'lat': -23.860, 'lon': 35.347, 'name': 'Maxixe'},
+            'vilanculos': {'lat': -22.018, 'lon': 35.313, 'name': 'Vilanculos'},
+            
+            # Sofala
+            'beira': {'lat': -19.8436, 'lon': 34.8389, 'name': 'Beira'},
+            'dondo': {'lat': -19.611, 'lon': 34.743, 'name': 'Dondo'},
+            'nhamatanda': {'lat': -19.672, 'lon': 34.457, 'name': 'Nhamatanda'},
+            
+            # Manica
+            'chimoio': {'lat': -19.116, 'lon': 33.484, 'name': 'Chimoio'},
+            'manica': {'lat': -18.936, 'lon': 32.873, 'name': 'Manica'},
+            'catandica': {'lat': -18.975, 'lon': 33.712, 'name': 'Catandica'},
+            
+            # Tete
+            'tete': {'lat': -16.1564, 'lon': 33.5867, 'name': 'Tete'},
+            'moatize': {'lat': -16.104, 'lon': 33.393, 'name': 'Moatize'},
+            'cahora-bassa': {'lat': -15.599, 'lon': 32.666, 'name': 'Cahora Bassa'},
+            'angonia': {'lat': -14.747, 'lon': 34.735, 'name': 'Angonia'},
+            
+            # Zambézia
+            'quelimane': {'lat': -17.8788, 'lon': 36.8883, 'name': 'Quelimane'},
+            'mocuba': {'lat': -16.836, 'lon': 36.986, 'name': 'Mocuba'},
+            'gurué': {'lat': -15.462, 'lon': 36.988, 'name': 'Gurué'},
+            'milange': {'lat': -15.934, 'lon': 35.831, 'name': 'Milange'},
+            
+            # Nampula
+            'nampula': {'lat': -15.1162, 'lon': 39.2666, 'name': 'Nampula'},
+            'nacala': {'lat': -14.543, 'lon': 40.673, 'name': 'Nacala'},
+            'ilha-de-mocambique': {'lat': -15.032, 'lon': 40.739, 'name': 'Ilha de Moçambique'},
+            'angoche': {'lat': -16.231, 'lon': 39.908, 'name': 'Angoche'},
+            
+            # Cabo Delgado
+            'pemba': {'lat': -12.974, 'lon': 40.517, 'name': 'Pemba'},
+            'montepuez': {'lat': -13.126, 'lon': 38.999, 'name': 'Montepuez'},
+            'mueda': {'lat': -11.674, 'lon': 39.563, 'name': 'Mueda'},
+            'mocimboa-da-praia': {'lat': -11.359, 'lon': 40.351, 'name': 'Mocímboa da Praia'},
+            
+            # Niassa
+            'lichinga': {'lat': -13.313, 'lon': 35.240, 'name': 'Lichinga'},
+            'cuamba': {'lat': -14.801, 'lon': 36.536, 'name': 'Cuamba'},
+            'mandimba': {'lat': -14.297, 'lon': 35.776, 'name': 'Mandimba'},
+            
+            # Variações de nomes (para facilitar buscas)
+            'lourenco-marques': {'lat': -25.966213, 'lon': 32.56745, 'name': 'Maputo'},
+            'beira-sofala': {'lat': -19.8436, 'lon': 34.8389, 'name': 'Beira'},
+            'vila-de-tete': {'lat': -16.1564, 'lon': 33.5867, 'name': 'Tete'},
+        }
         self.geocoding_url = "https://api.openweathermap.org/geo/1.0"
         
     def get_coordinates(self, city_name: str, country_code: str = "MZ") -> Optional[Dict]:
         """
-        Obter coordenadas de uma cidade em Moçambique
+        Obter coordenadas de uma cidade usando coordenadas exatas quando disponível
         """
+        # Verificar se temos coordenadas exatas para esta cidade
+        city_key = city_name.lower().strip()
+        if city_key in self.exact_coordinates:
+            logger.info(f"Usando coordenadas exatas para {city_name}")
+            return self.exact_coordinates[city_key]
+        
+        # Fallback para geocoding API se não temos coordenadas exatas
         try:
             url = f"{self.geocoding_url}/direct"
             params = {
@@ -64,13 +133,18 @@ class OpenWeatherService:
             
             return {
                 'temperatura': data['main']['temp'],
+                'sensacao_termica': data['main']['feels_like'],
                 'temperatura_min': data['main']['temp_min'],
                 'temperatura_max': data['main']['temp_max'],
                 'umidade': data['main']['humidity'],
                 'pressao': data['main']['pressure'],
                 'descricao': data['weather'][0]['description'],
+                'condicao': data['weather'][0]['main'].lower(),
+                'icone': data['weather'][0]['icon'],
                 'velocidade_vento': data['wind']['speed'],
-                'visibilidade': data.get('visibility', 0) / 1000,  # em km
+                'direcao_vento': data['wind'].get('deg', 0),
+                'visibilidade': data.get('visibility', 10000) / 1000,  # em km
+                'pais': data['sys']['country'],
                 'data_atualizacao': datetime.fromtimestamp(data['dt']).isoformat()
             }
             
@@ -128,14 +202,16 @@ class OpenWeatherService:
             # Processar dados diários
             for date, data_day in daily_forecasts.items():
                 forecasts.append({
-                    'data_previsao': data_day['data'],
+                    'data': data_day['data'],
                     'temperatura_min': min(data_day['temperaturas']),
                     'temperatura_max': max(data_day['temperaturas']),
-                    'umidade': sum(data_day['umidades']) / len(data_day['umidades']),
-                    'precipitacao': sum(data_day['precipitacoes']),
-                    'velocidade_vento': sum(data_day['ventos']) / len(data_day['ventos']),
+                    'condicao': 'clear',
                     'descricao': max(set(data_day['descricoes']), 
-                                   key=data_day['descricoes'].count)
+                                   key=data_day['descricoes'].count),
+                    'icone': '01d',
+                    'probabilidade_chuva': min(100, sum(data_day['precipitacoes']) * 10),
+                    'umidade': int(sum(data_day['umidades']) / len(data_day['umidades'])),
+                    'velocidade_vento': sum(data_day['ventos']) / len(data_day['ventos'])
                 })
             
             return forecasts

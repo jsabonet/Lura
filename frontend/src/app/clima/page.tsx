@@ -146,11 +146,58 @@ export default function ClimaPage() {
               onChange={(e) => setCidade(e.target.value)}
               className="px-4 py-2 border border-green-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 dark:bg-green-700 dark:border-green-600 dark:text-white"
             >
+              {/* Maputo (Província e Cidade) */}
               <option value="Maputo">Maputo</option>
+              <option value="Matola">Matola</option>
+              
+              {/* Gaza */}
+              <option value="Xai-Xai">Xai-Xai</option>
+              <option value="Chokwe">Chokwe</option>
+              <option value="Chibuto">Chibuto</option>
+              
+              {/* Inhambane */}
+              <option value="Inhambane">Inhambane</option>
+              <option value="Maxixe">Maxixe</option>
+              <option value="Vilanculos">Vilanculos</option>
+              
+              {/* Sofala */}
               <option value="Beira">Beira</option>
-              <option value="Nampula">Nampula</option>
+              <option value="Dondo">Dondo</option>
+              <option value="Nhamatanda">Nhamatanda</option>
+              
+              {/* Manica */}
+              <option value="Chimoio">Chimoio</option>
+              <option value="Manica">Manica</option>
+              <option value="Catandica">Catandica</option>
+              
+              {/* Tete */}
               <option value="Tete">Tete</option>
+              <option value="Moatize">Moatize</option>
+              <option value="Cahora-Bassa">Cahora Bassa</option>
+              <option value="Angonia">Angonia</option>
+              
+              {/* Zambézia */}
               <option value="Quelimane">Quelimane</option>
+              <option value="Mocuba">Mocuba</option>
+              <option value="Gurué">Gurué</option>
+              <option value="Milange">Milange</option>
+              
+              {/* Nampula */}
+              <option value="Nampula">Nampula</option>
+              <option value="Nacala">Nacala</option>
+              <option value="Ilha-de-Mocambique">Ilha de Moçambique</option>
+              <option value="Angoche">Angoche</option>
+              
+              {/* Cabo Delgado */}
+              <option value="Pemba">Pemba</option>
+              <option value="Montepuez">Montepuez</option>
+              <option value="Mueda">Mueda</option>
+              <option value="Mocimboa-da-Praia">Mocímboa da Praia</option>
+              
+              {/* Niassa */}
+              <option value="Lichinga">Lichinga</option>
+              <option value="Cuamba">Cuamba</option>
+              <option value="Mandimba">Mandimba</option>
             </select>
           </div>
         </div>

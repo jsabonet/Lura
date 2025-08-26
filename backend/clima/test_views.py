@@ -11,13 +11,13 @@ def clima_atual_view(request):
     """
     View para obter clima atual usando OpenWeather API
     """
-    localizacao = request.GET.get('localizacao', 'Maputo')
+    cidade = request.GET.get('cidade', request.GET.get('localizacao', 'Maputo'))
     
     try:
-        print(f"🔍 Buscando clima para: {localizacao}")
+        print(f"🔍 Buscando clima para: {cidade}")
         
         # Obter coordenadas da cidade
-        coords = openweather_service.get_coordinates(localizacao)
+        coords = openweather_service.get_coordinates(cidade)
         print(f"🌍 Coordenadas obtidas: {coords}")
         
         if coords:
@@ -28,23 +28,42 @@ def clima_atual_view(request):
             print(f"🌤️ Dados climáticos: {weather_data}")
             
             if weather_data:
-                weather_data['localizacao'] = localizacao
-                weather_data['fonte'] = 'openweather_api'
+                # Mapear os dados para o formato esperado pelo frontend
+                response_data = {
+                    'temperatura': weather_data['temperatura'],
+                    'sensacao_termica': weather_data.get('sensacao_termica', weather_data['temperatura']),
+                    'umidade': weather_data['umidade'],
+                    'pressao': weather_data['pressao'],
+                    'velocidade_vento': weather_data['velocidade_vento'],
+                    'direcao_vento': weather_data.get('direcao_vento', 0),
+                    'visibilidade': weather_data.get('visibilidade', 10),
+                    'condicao': weather_data.get('condicao', 'clear'),
+                    'descricao': weather_data['descricao'],
+                    'icone': weather_data.get('icone', '01d'),
+                    'cidade': cidade,
+                    'pais': weather_data.get('pais', 'MZ'),
+                    'data_hora': weather_data.get('data_atualizacao', datetime.now().isoformat()),
+                    'fonte': 'openweather_api'
+                }
                 print(f"✅ Retornando dados reais da API")
-                return Response(weather_data)
+                return Response(response_data)
         
         print("⚠️ Usando fallback - coordenadas ou dados não encontrados")
         # Fallback para dados mock se API não disponível
         data = {
-            'localizacao': localizacao,
             'temperatura': 27,
-            'temperatura_min': 22,
-            'temperatura_max': 32,
-            'descricao': 'Parcialmente nublado',
+            'sensacao_termica': 29,
             'umidade': 68,
-            'velocidade_vento': 12,
             'pressao': 1013,
-            'data_atualizacao': datetime.now().isoformat(),
+            'velocidade_vento': 12,
+            'direcao_vento': 180,
+            'visibilidade': 10,
+            'condicao': 'clouds',
+            'descricao': 'Parcialmente nublado',
+            'icone': '02d',
+            'cidade': cidade,
+            'pais': 'MZ',
+            'data_hora': datetime.now().isoformat(),
             'fonte': 'dados_simulados'
         }
         
@@ -54,15 +73,19 @@ def clima_atual_view(request):
         print(f"❌ Erro capturado: {e}")
         # Em caso de erro, retornar dados mock
         data = {
-            'localizacao': localizacao,
             'temperatura': 25,
-            'temperatura_min': 20,
-            'temperatura_max': 30,
-            'descricao': 'Dados indisponíveis',
+            'sensacao_termica': 27,
             'umidade': 65,
-            'velocidade_vento': 10,
             'pressao': 1013,
-            'data_atualizacao': datetime.now().isoformat(),
+            'velocidade_vento': 10,
+            'direcao_vento': 180,
+            'visibilidade': 10,
+            'condicao': 'clear',
+            'descricao': 'Dados indisponíveis',
+            'icone': '01d',
+            'cidade': cidade,
+            'pais': 'MZ',
+            'data_hora': datetime.now().isoformat(),
             'erro': str(e),
             'fonte': 'dados_simulados'
         }
@@ -152,12 +175,12 @@ def previsao_tempo_view(request):
     """
     View para obter previsão do tempo
     """
-    localizacao = request.GET.get('localizacao', 'Maputo')
+    cidade = request.GET.get('cidade', request.GET.get('localizacao', 'Maputo'))
     dias = int(request.GET.get('dias', 5))
     
     try:
         # Obter coordenadas da cidade
-        coords = openweather_service.get_coordinates(localizacao)
+        coords = openweather_service.get_coordinates(cidade)
         
         if coords:
             # Obter previsão real
@@ -167,7 +190,7 @@ def previsao_tempo_view(request):
             
             if previsao_real:
                 for previsao in previsao_real:
-                    previsao['localizacao'] = localizacao
+                    previsao['cidade'] = cidade
                 
                 return Response(previsao_real)
         
@@ -176,14 +199,16 @@ def previsao_tempo_view(request):
         for i in range(dias):
             data = datetime.now() + timedelta(days=i)
             previsao.append({
-                'data_previsao': data.date().isoformat(),
+                'data': data.date().isoformat(),
                 'temperatura_min': 20 + i,
                 'temperatura_max': 30 + i,
                 'umidade': 65 + i * 2,
-                'precipitacao': 0 if i < 2 else 5 * i,
+                'probabilidade_chuva': 0 if i < 2 else 5 * i,
                 'velocidade_vento': 10 + i,
                 'descricao': 'Ensolarado' if i < 3 else 'Parcialmente nublado',
-                'localizacao': localizacao,
+                'condicao': 'clear' if i < 3 else 'clouds',
+                'icone': '01d' if i < 3 else '03d',
+                'cidade': cidade,
                 'fonte': 'dados_simulados'
             })
         
