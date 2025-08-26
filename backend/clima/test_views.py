@@ -10,11 +10,54 @@ from .services.openweather import openweather_service
 def clima_atual_view(request):
     """
     View para obter clima atual usando OpenWeather API
+    Suporta tanto busca por cidade quanto por coordenadas GPS
     """
-    cidade = request.GET.get('cidade', request.GET.get('localizacao', 'Maputo'))
+    cidade = request.GET.get('cidade')
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
     
     try:
-        print(f"🔍 Buscando clima para: {cidade}")
+        # Priorizar coordenadas GPS se fornecidas
+        if lat and lon:
+            try:
+                latitude = float(lat)
+                longitude = float(lon)
+                print(f"🎯 Usando coordenadas GPS: [{latitude}, {longitude}]")
+                
+                # Obter dados climáticos reais usando coordenadas GPS
+                weather_data = openweather_service.get_current_weather(latitude, longitude)
+                
+                if weather_data:
+                    # Mapear os dados para o formato esperado pelo frontend
+                    response_data = {
+                        'temperatura': weather_data['temperatura'],
+                        'sensacao_termica': weather_data.get('sensacao_termica', weather_data['temperatura']),
+                        'umidade': weather_data['umidade'],
+                        'pressao': weather_data['pressao'],
+                        'velocidade_vento': weather_data['velocidade_vento'],
+                        'direcao_vento': weather_data.get('direcao_vento', 0),
+                        'visibilidade': weather_data.get('visibilidade', 10),
+                        'condicao': weather_data.get('condicao', 'clear'),
+                        'descricao': weather_data['descricao'],
+                        'icone': weather_data.get('icone', '01d'),
+                        'cidade': f"GPS ({latitude:.4f}, {longitude:.4f})",
+                        'pais': weather_data.get('pais', 'MZ'),
+                        'data_hora': weather_data.get('data_atualizacao', datetime.now().isoformat()),
+                        'fonte': 'openweather_api_gps',
+                        'coordenadas': {'lat': latitude, 'lon': longitude}
+                    }
+                    print(f"✅ Retornando dados reais da API via GPS")
+                    return Response(response_data)
+                
+            except (ValueError, TypeError):
+                print(f"❌ Coordenadas GPS inválidas: lat={lat}, lon={lon}")
+                # Continuar com busca por cidade se coordenadas são inválidas
+        
+        # Fallback para busca por cidade
+        if not cidade:
+            cidade = 'Maputo'  # Cidade padrão
+            
+        print(f"🔍 Buscando clima para cidade: {cidade}")
         
         # Obter coordenadas da cidade
         coords = openweather_service.get_coordinates(cidade)
@@ -174,11 +217,40 @@ def alertas_climaticos_view(request):
 def previsao_tempo_view(request):
     """
     View para obter previsão do tempo
+    Suporta tanto busca por cidade quanto por coordenadas GPS
     """
-    cidade = request.GET.get('cidade', request.GET.get('localizacao', 'Maputo'))
+    cidade = request.GET.get('cidade')
+    lat = request.GET.get('lat')
+    lon = request.GET.get('lon')
     dias = int(request.GET.get('dias', 5))
     
     try:
+        # Priorizar coordenadas GPS se fornecidas
+        if lat and lon:
+            try:
+                latitude = float(lat)
+                longitude = float(lon)
+                print(f"🎯 Usando coordenadas GPS para previsão: [{latitude}, {longitude}]")
+                
+                # Obter previsão real usando coordenadas GPS
+                previsao_real = openweather_service.get_forecast(latitude, longitude, dias)
+                
+                if previsao_real:
+                    for previsao in previsao_real:
+                        previsao['cidade'] = f"GPS ({latitude:.4f}, {longitude:.4f})"
+                        previsao['fonte'] = 'openweather_api_gps'
+                    
+                    return Response(previsao_real)
+                
+            except (ValueError, TypeError):
+                print(f"❌ Coordenadas GPS inválidas para previsão: lat={lat}, lon={lon}")
+        
+        # Fallback para busca por cidade
+        if not cidade:
+            cidade = 'Maputo'  # Cidade padrão
+            
+        print(f"🔍 Buscando previsão para cidade: {cidade}")
+        
         # Obter coordenadas da cidade
         coords = openweather_service.get_coordinates(cidade)
         
