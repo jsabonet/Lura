@@ -1,0 +1,9 @@
+{
+  "latitude": -25.92492722861606,
+  "longitude": 32.62543817845181,
+  "accuracy_meters": 436.04166666666663,
+  "towers_used": 4,
+  "method": "hybrid_triangulation",
+  "confidence": 0.8,
+  "timestamp": "2025-08-26T10:33:14.301622"
+}

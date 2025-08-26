@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'recomendacoes',
     'mercado',
     'notificacoes',
+    'triangulacao',
 ]
 
 MIDDLEWARE = [

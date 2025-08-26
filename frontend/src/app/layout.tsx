@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { GeolocationProvider } from "@/contexts/GeolocationContext";
+import { IntegratedLocationWeatherProvider } from "@/contexts/IntegratedLocationWeatherContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,9 +38,9 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <AuthProvider>
-          <GeolocationProvider>
+          <IntegratedLocationWeatherProvider autoInitialize={true}>
             {children}
-          </GeolocationProvider>
+          </IntegratedLocationWeatherProvider>
         </AuthProvider>
       </body>
     </html>

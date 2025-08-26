@@ -1,0 +1,34 @@
+# Dependências para Sistema de Torres Celulares 4G/LTE - AgroAlerta
+# ====================================================================
+
+# Comunicação Serial
+pyserial==3.5
+serial==0.0.97
+
+# Requisições HTTP (Google Geolocation API)
+requests==2.31.0
+urllib3==2.0.7
+
+# Processamento de dados
+json5==0.9.14
+
+# Logging e monitoramento
+logging==0.4.9.6
+
+# Desenvolvimento e testes
+pytest==7.4.3
+pytest-asyncio==0.21.1
+
+# Análise de dados (opcional)
+pandas==2.1.4
+numpy==1.24.4
+
+# Visualização (opcional)
+matplotlib==3.8.2
+plotly==5.17.0
+
+# Configuração
+python-dotenv==1.0.0
+
+# Utilitários de sistema
+psutil==5.9.6

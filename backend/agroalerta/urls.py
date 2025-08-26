@@ -27,6 +27,7 @@ urlpatterns = [
     path('api/recomendacoes/', include('recomendacoes.urls')),
     path('api/mercado/', include('mercado.urls')),
     path('api/notificacoes/', include('notificacoes.urls')),
+    path('api/triangulation/', include('triangulacao.urls')),
 ]
 
 # Servir arquivos de media em desenvolvimento

@@ -2,18 +2,13 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useIntegratedLocationWeather } from '@/contexts/IntegratedLocationWeatherContext';
-import { WeatherDataProvider, useWeatherData } from '@/contexts/WeatherDataContext';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { LoadingPage } from '@/components/common/Loading';
-import { WeatherDashboard } from '@/components/WeatherDashboard';
+import { IntegratedWeatherDisplay } from '@/components/IntegratedWeatherDisplay';
 import Link from 'next/link';
 
-// Importar apenas as funcionalidades dos novos sistemas
-import RegionalWeatherSystem from '@/components/RegionalWeatherSystem';
-import PreciseGPSSystem from '@/components/PreciseGPSSystem';
-
-function ClimaPageContent() {
+export default function ClimaPage() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const { 
@@ -22,13 +17,6 @@ function ClimaPageContent() {
     weatherForecast,
     isInitialized 
   } = useIntegratedLocationWeather();
-
-  // Estado para controlar qual sistema adicional mostrar
-  const [showRegionalSystem, setShowRegionalSystem] = useState(false);
-  const [showGPSSystem, setShowGPSSystem] = useState(false);
-
-  // Context para limpar dados quando necessário
-  const { clearData } = useWeatherData();
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -86,98 +74,43 @@ function ClimaPageContent() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Controles de Dados Climáticos - Movido para cima */}
-        <div className="mb-8">
-          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-6 border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-              <span className="text-xl mr-2">⚙️</span>
-              Opções de Dados Climáticos
-              {(showGPSSystem || showRegionalSystem) && (
-                <span className="ml-3 px-2 py-1 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-                  {showGPSSystem ? '🛰️ GPS Ativo' : '🗺️ Regional Ativo'}
-                </span>
-              )}
-            </h3>
-            
-            <div className="flex flex-wrap gap-4 items-center">
-              <button
-                onClick={() => {
-                  if (showGPSSystem) {
-                    // Se estava ativo, limpar dados do contexto
-                    clearData();
-                  }
-                  setShowGPSSystem(!showGPSSystem);
-                  setShowRegionalSystem(false);
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  showGPSSystem
-                    ? 'bg-green-600 text-white shadow-lg'
-                    : 'bg-white dark:bg-slate-700 text-green-600 dark:text-green-400 border border-green-600 dark:border-green-500 hover:bg-green-50 dark:hover:bg-green-900/20'
-                }`}
-              >
-                🛰️ GPS Preciso
-              </button>
+        {/* Main Weather Display */}
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Dados Climáticos Completos
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Sistema integrado Google Maps + OpenWeather
+                </p>
+              </div>
               
-              <button
-                onClick={() => {
-                  if (showRegionalSystem) {
-                    // Se estava ativo, limpar dados do contexto
-                    clearData();
-                  }
-                  setShowRegionalSystem(!showRegionalSystem);
-                  setShowGPSSystem(false);
-                }}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  showRegionalSystem
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 border border-blue-600 dark:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                }`}
-              >
-                🗺️ Clima Regional
-              </button>
-
-              {(showGPSSystem || showRegionalSystem) && (
-                <button
-                  onClick={() => {
-                    // Limpar dados do contexto ao fechar
-                    clearData();
-                    setShowGPSSystem(false);
-                    setShowRegionalSystem(false);
-                  }}
-                  className="px-4 py-2 rounded-lg font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
-                >
-                  ❌ Voltar ao Padrão
-                </button>
-              )}
+              {/* API Status */}
+              <div className="flex flex-col items-end space-y-1">
+                <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span>Google Maps</span>
+                </div>
+                <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <span>OpenWeather</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Sistema GPS Preciso */}
-        {showGPSSystem && (
-          <div className="mb-8">
-            <PreciseGPSSystem 
-              onLocationUpdate={(location) => {
-                console.log('Nova localização GPS:', location);
-              }}
-              onError={(error) => {
-                console.error('Erro GPS:', error);
-              }}
+          {/* Integrated Weather Component */}
+          <div className="p-6">
+            <IntegratedWeatherDisplay 
+              showDetailedForecast={true}
+              showLocationDetails={true}
+              autoRefresh={true}
+              refreshInterval={30}
             />
           </div>
-        )}
-
-        {/* Sistema Regional com Select */}
-        {showRegionalSystem && (
-          <div className="mb-8">
-            <RegionalWeatherSystem apiKey={process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || ''} />
-          </div>
-        )}
-
-        {/* Weather Dashboard Original */}
-        <WeatherDashboard className="mb-8" />
-
-        {/* Botões para Sistemas Alternativos - Removido daqui */}
+        </div>
 
         {/* Agricultural Insights */}
         {currentWeather && (
@@ -286,13 +219,5 @@ function ClimaPageContent() {
         </div>
       </div>
     </div>
-  );
-}
-
-export default function ClimaPage() {
-  return (
-    <WeatherDataProvider>
-      <ClimaPageContent />
-    </WeatherDataProvider>
   );
 }

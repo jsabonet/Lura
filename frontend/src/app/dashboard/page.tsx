@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { climaService, ClimaAtual, AlertaClimatico } from '@/services/clima';
+import WeatherWidget from '@/components/WeatherWidget';
 import Link from 'next/link';
 
 export default function Dashboard() {
@@ -74,7 +75,7 @@ export default function Dashboard() {
               <Link href="/dashboard" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white font-medium">
                 Dashboard
               </Link>
-              <Link href="/clima" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white">
+              <Link href="/clima-novo" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white">
                 Clima
               </Link>
               <Link href="/pragas" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white">
@@ -116,33 +117,9 @@ export default function Dashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Clima Atual */}
-          <div className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-green-800 dark:text-green-100">
-                Clima Atual
-              </h3>
-              <div className="text-2xl">🌤️</div>
-            </div>
-            {loadingData ? (
-              <div className="text-green-600 dark:text-green-200">Carregando...</div>
-            ) : climaAtual ? (
-              <div>
-                <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {climaAtual.temperatura}°C
-                </div>
-                <div className="text-sm text-green-600 dark:text-green-200">
-                  {climaAtual.descricao}
-                </div>
-                <div className="text-xs text-green-500 dark:text-green-300 mt-2">
-                  {climaAtual.cidade}
-                </div>
-              </div>
-            ) : (
-              <div className="text-green-600 dark:text-green-200">
-                Dados não disponíveis
-              </div>
-            )}
+          {/* Clima Moderno - Widget Integrado */}
+          <div className="md:col-span-2">
+            <WeatherWidget compact={true} />
           </div>
 
           {/* Alertas */}

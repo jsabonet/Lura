@@ -7,6 +7,17 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Configuração de imagens para APIs externas
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'openweathermap.org',
+        port: '',
+        pathname: '/img/wn/**',
+      },
+    ],
+  },
   // Configurações para resolver problemas de desenvolvimento
   async headers() {
     return [

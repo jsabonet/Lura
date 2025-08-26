@@ -1,0 +1,32 @@
+[
+  {
+    "timestamp": "10:28:52",
+    "rssi": -79,
+    "operator": "Vodacom",
+    "region": "Província de Manica"
+  },
+  {
+    "timestamp": "10:28:53",
+    "rssi": -82,
+    "operator": "Vodacom",
+    "region": "Província de Manica"
+  },
+  {
+    "timestamp": "10:28:54",
+    "rssi": -73,
+    "operator": "Vodacom",
+    "region": "Província de Manica"
+  },
+  {
+    "timestamp": "10:28:55",
+    "rssi": -89,
+    "operator": "Vodacom",
+    "region": "Província de Manica"
+  },
+  {
+    "timestamp": "10:28:56",
+    "rssi": -90,
+    "operator": "Vodacom",
+    "region": "Província de Manica"
+  }
+]
