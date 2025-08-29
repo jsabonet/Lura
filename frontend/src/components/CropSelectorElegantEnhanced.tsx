@@ -191,7 +191,7 @@ function CropSelectorElegantEnhanced({
             {/* Título da categoria */}
             <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide mb-3 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500"></span>
-              {CATEGORY_LABELS[category]}
+              {CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]}
               <span className="text-xs text-gray-500 dark:text-gray-400 normal-case">
                 ({crops.length})
               </span>

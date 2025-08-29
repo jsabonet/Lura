@@ -195,7 +195,8 @@ function CropSelectorMinimal({
                 {/* Informações básicas */}
                 <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-600 dark:text-gray-400">
                   <span className="px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded">
-                    {crop.plantingTime}
+                    {crop.season === 'todo_ano' ? 'Todo ano' : 
+                     crop.season === 'chuvosa' ? 'Época chuvosa' : 'Época seca'}
                   </span>
                   <span className="px-2 py-1 bg-gray-100 dark:bg-gray-600 rounded">
                     {crop.season === 'todo_ano' ? 'Todo ano' : 

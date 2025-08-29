@@ -458,6 +458,68 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'amplo',
       culturalAcceptance: 'alta',
       foodSecurity: 'essencial'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 5,
+        vegetative: 30,
+        flowering: 15,
+        fruiting: 30,
+        maturation: 10
+      },
+      criticalPeriods: {
+        waterStress: ['floração', 'enchimento_vagens'],
+        heatStress: ['floração'],
+        coldStress: ['germinação']
+      },
+      photoperiod: {
+        sensitivity: 'média',
+        criticalDaylength: 12
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'outubro', end: 'dezembro', description: 'Início das chuvas' },
+        secondary: { start: 'janeiro', end: 'fevereiro', description: 'Plantio tardio' }
+      },
+      criticalMonths: ['novembro', 'dezembro', 'janeiro'],
+      harvestMonths: ['janeiro', 'março'],
+      offSeasonViability: 'limitada'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 30,
+        coldThreshold: 12,
+        degreeDay: { base: 10, max: 25 }
+      },
+      humidityStress: {
+        lowThreshold: 50,
+        highThreshold: 85
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.4,
+        kc_development: 0.7,
+        kc_mid: 1.15,
+        kc_late: 0.8
+      },
+      waterStressSensitivity: {
+        germination: 'alta',
+        flowering: 'alta',
+        fruiting: 'média'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 200000, max: 400000, unit: 'plantas/ha' },
+      spacing: { row: 40, plant: 10, unit: 'cm' },
+      cultivationSystem: ['monocultivo', 'consórcio', 'rotação'],
+      mechanizationLevel: 'manual'
     }
   },
 
@@ -523,6 +585,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'moderado',
       culturalAcceptance: 'média',
       foodSecurity: 'importante'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 7,
+        vegetative: 40,
+        flowering: 20,
+        fruiting: 35,
+        maturation: 8
+      },
+      criticalPeriods: {
+        waterStress: ['floração', 'formação_vagens'],
+        heatStress: ['floração'],
+        coldStress: ['germinação']
+      },
+      photoperiod: {
+        sensitivity: 'baixa'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'outubro', end: 'dezembro', description: 'Época das chuvas' },
+        secondary: { start: 'janeiro', end: 'fevereiro', description: 'Plantio tardio' }
+      },
+      criticalMonths: ['novembro', 'dezembro', 'janeiro'],
+      harvestMonths: ['março', 'maio'],
+      offSeasonViability: 'limitada'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 32,
+        coldThreshold: 15,
+        degreeDay: { base: 12, max: 28 }
+      },
+      humidityStress: {
+        lowThreshold: 40,
+        highThreshold: 75
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.4,
+        kc_development: 0.8,
+        kc_mid: 1.0,
+        kc_late: 0.6
+      },
+      waterStressSensitivity: {
+        germination: 'média',
+        flowering: 'alta',
+        fruiting: 'baixa'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 100000, max: 200000, unit: 'plantas/ha' },
+      spacing: { row: 50, plant: 20, unit: 'cm' },
+      cultivationSystem: ['monocultivo', 'rotação'],
+      mechanizationLevel: 'manual'
     }
   },
 
@@ -589,6 +712,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'limitado',
       culturalAcceptance: 'alta',
       foodSecurity: 'importante'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 6,
+        vegetative: 25,
+        flowering: 15,
+        fruiting: 30,
+        maturation: 9
+      },
+      criticalPeriods: {
+        waterStress: ['floração', 'frutificação'],
+        heatStress: ['floração', 'frutificação'],
+        coldStress: ['germinação', 'floração']
+      },
+      photoperiod: {
+        sensitivity: 'baixa'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'março', end: 'junho', description: 'Época seca' },
+        secondary: { start: 'setembro', end: 'novembro', description: 'Época quente' }
+      },
+      criticalMonths: ['abril', 'maio', 'junho'],
+      harvestMonths: ['junho', 'setembro'],
+      offSeasonViability: 'possível'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 30,
+        coldThreshold: 15,
+        degreeDay: { base: 10, max: 27 }
+      },
+      humidityStress: {
+        lowThreshold: 60,
+        highThreshold: 80
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.6,
+        kc_development: 1.1,
+        kc_mid: 1.2,
+        kc_late: 0.8
+      },
+      waterStressSensitivity: {
+        germination: 'alta',
+        flowering: 'alta',
+        fruiting: 'alta'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 20000, max: 40000, unit: 'plantas/ha' },
+      spacing: { row: 100, plant: 50, unit: 'cm' },
+      cultivationSystem: ['monocultivo'],
+      mechanizationLevel: 'manual'
     }
   },
 
@@ -654,6 +838,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'moderado',
       culturalAcceptance: 'alta',
       foodSecurity: 'importante'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 5,
+        vegetative: 30,
+        flowering: 10,
+        fruiting: 10,
+        maturation: 5
+      },
+      criticalPeriods: {
+        waterStress: ['germinação', 'desenvolvimento vegetativo'],
+        heatStress: ['desenvolvimento vegetativo', 'floração'],
+        coldStress: ['germinação']
+      },
+      photoperiod: {
+        sensitivity: 'alta'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'abril', end: 'agosto', description: 'Época seca' },
+        secondary: { start: 'março', end: 'maio', description: 'Fim das chuvas' }
+      },
+      criticalMonths: ['maio', 'junho', 'julho'],
+      harvestMonths: ['junho', 'setembro'],
+      offSeasonViability: 'limitada'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 25,
+        coldThreshold: 8,
+        degreeDay: { base: 5, max: 20 }
+      },
+      humidityStress: {
+        lowThreshold: 65,
+        highThreshold: 85
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.7,
+        kc_development: 1.0,
+        kc_mid: 1.1,
+        kc_late: 0.9
+      },
+      waterStressSensitivity: {
+        germination: 'alta',
+        flowering: 'média',
+        fruiting: 'média'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 150000, max: 250000, unit: 'plantas/ha' },
+      spacing: { row: 30, plant: 25, unit: 'cm' },
+      cultivationSystem: ['monocultivo', 'consórcio'],
+      mechanizationLevel: 'manual'
     }
   },
 
@@ -720,6 +965,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'amplo',
       culturalAcceptance: 'alta',
       foodSecurity: 'importante'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 90,
+        vegetative: 1460, // 4 anos
+        flowering: 365, // 1 ano
+        fruiting: 365, // 1 ano contínuo
+        maturation: 365 // 1 ano contínuo
+      },
+      criticalPeriods: {
+        waterStress: ['floração', 'frutificação'],
+        heatStress: ['germinação', 'estabelecimento'],
+        coldStress: ['todos os estágios']
+      },
+      photoperiod: {
+        sensitivity: 'baixa'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'outubro', end: 'dezembro', description: 'Início das chuvas' },
+        secondary: { start: 'março', end: 'maio', description: 'Segunda época chuvosa' }
+      },
+      criticalMonths: ['outubro', 'novembro', 'dezembro'],
+      harvestMonths: ['janeiro', 'dezembro'], // todo ano após estabelecimento
+      offSeasonViability: 'possível'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 35,
+        coldThreshold: 18,
+        degreeDay: { base: 20, max: 32 }
+      },
+      humidityStress: {
+        lowThreshold: 70,
+        highThreshold: 95
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.8,
+        kc_development: 1.0,
+        kc_mid: 1.2,
+        kc_late: 1.1
+      },
+      waterStressSensitivity: {
+        germination: 'alta',
+        flowering: 'alta',
+        fruiting: 'alta'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 140, max: 200, unit: 'plantas/ha' },
+      spacing: { row: 900, plant: 900, unit: 'cm' },
+      cultivationSystem: ['monocultivo'],
+      mechanizationLevel: 'manual'
     }
   },
 
@@ -785,6 +1091,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'amplo',
       culturalAcceptance: 'alta',
       foodSecurity: 'importante'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 30,
+        vegetative: 730, // 2 anos
+        flowering: 90,
+        fruiting: 180,
+        maturation: 60
+      },
+      criticalPeriods: {
+        waterStress: ['floração', 'frutificação'],
+        heatStress: ['floração'],
+        coldStress: ['estabelecimento']
+      },
+      photoperiod: {
+        sensitivity: 'baixa'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'novembro', end: 'janeiro', description: 'Época chuvosa' },
+        secondary: { start: 'março', end: 'maio', description: 'Época seca' }
+      },
+      criticalMonths: ['dezembro', 'janeiro', 'fevereiro'],
+      harvestMonths: ['setembro', 'dezembro'],
+      offSeasonViability: 'possível'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 38,
+        coldThreshold: 15,
+        degreeDay: { base: 18, max: 35 }
+      },
+      humidityStress: {
+        lowThreshold: 60,
+        highThreshold: 85
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.6,
+        kc_development: 0.9,
+        kc_mid: 1.1,
+        kc_late: 0.8
+      },
+      waterStressSensitivity: {
+        germination: 'média',
+        flowering: 'alta',
+        fruiting: 'alta'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 100, max: 150, unit: 'plantas/ha' },
+      spacing: { row: 800, plant: 800, unit: 'cm' },
+      cultivationSystem: ['monocultivo', 'agroflorestal'],
+      mechanizationLevel: 'manual'
     }
   },
 
@@ -851,6 +1218,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'amplo',
       culturalAcceptance: 'alta',
       foodSecurity: 'essencial'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 14,
+        vegetative: 180,
+        flowering: 30,
+        fruiting: 90,
+        maturation: 60
+      },
+      criticalPeriods: {
+        waterStress: ['estabelecimento', 'tuberização'],
+        heatStress: ['estabelecimento'],
+        coldStress: ['todos os estágios']
+      },
+      photoperiod: {
+        sensitivity: 'média'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'outubro', end: 'dezembro', description: 'Início das chuvas' },
+        secondary: { start: 'março', end: 'maio', description: 'Segunda época' }
+      },
+      criticalMonths: ['outubro', 'novembro', 'dezembro'],
+      harvestMonths: ['agosto', 'outubro'],
+      offSeasonViability: 'possível'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 38,
+        coldThreshold: 15,
+        degreeDay: { base: 15, max: 35 }
+      },
+      humidityStress: {
+        lowThreshold: 50,
+        highThreshold: 85
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.5,
+        kc_development: 0.8,
+        kc_mid: 1.0,
+        kc_late: 0.6
+      },
+      waterStressSensitivity: {
+        germination: 'média',
+        flowering: 'baixa',
+        fruiting: 'baixa'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 8000, max: 12000, unit: 'plantas/ha' },
+      spacing: { row: 100, plant: 100, unit: 'cm' },
+      cultivationSystem: ['monocultivo', 'consórcio'],
+      mechanizationLevel: 'manual'
     }
   },
 
@@ -916,6 +1344,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'amplo',
       culturalAcceptance: 'alta',
       foodSecurity: 'importante'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 10,
+        vegetative: 60,
+        flowering: 15,
+        fruiting: 20,
+        maturation: 15
+      },
+      criticalPeriods: {
+        waterStress: ['estabelecimento', 'tuberização'],
+        heatStress: ['floração', 'tuberização'],
+        coldStress: ['estabelecimento']
+      },
+      photoperiod: {
+        sensitivity: 'média'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'outubro', end: 'dezembro', description: 'Época chuvosa' },
+        secondary: { start: 'março', end: 'abril', description: 'Segunda época' }
+      },
+      criticalMonths: ['novembro', 'dezembro', 'janeiro'],
+      harvestMonths: ['fevereiro', 'abril'],
+      offSeasonViability: 'limitada'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 32,
+        coldThreshold: 15,
+        degreeDay: { base: 15, max: 30 }
+      },
+      humidityStress: {
+        lowThreshold: 60,
+        highThreshold: 85
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.5,
+        kc_development: 0.8,
+        kc_mid: 1.1,
+        kc_late: 0.7
+      },
+      waterStressSensitivity: {
+        germination: 'alta',
+        flowering: 'média',
+        fruiting: 'alta'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 25000, max: 40000, unit: 'plantas/ha' },
+      spacing: { row: 100, plant: 40, unit: 'cm' },
+      cultivationSystem: ['monocultivo', 'consórcio'],
+      mechanizationLevel: 'manual'
     }
   },
 
@@ -982,6 +1471,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'moderado',
       culturalAcceptance: 'média',
       foodSecurity: 'básica'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 7,
+        vegetative: 60,
+        flowering: 45,
+        fruiting: 50,
+        maturation: 18
+      },
+      criticalPeriods: {
+        waterStress: ['floração', 'frutificação'],
+        heatStress: ['floração', 'frutificação'],
+        coldStress: ['germinação', 'estabelecimento']
+      },
+      photoperiod: {
+        sensitivity: 'alta'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'novembro', end: 'dezembro', description: 'Época chuvosa' },
+        secondary: { start: 'janeiro', end: 'fevereiro', description: 'Segunda época' }
+      },
+      criticalMonths: ['dezembro', 'janeiro', 'fevereiro'],
+      harvestMonths: ['maio', 'julho'],
+      offSeasonViability: 'limitada'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 38,
+        coldThreshold: 15,
+        degreeDay: { base: 15, max: 35 }
+      },
+      humidityStress: {
+        lowThreshold: 50,
+        highThreshold: 80
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.6,
+        kc_development: 1.0,
+        kc_mid: 1.2,
+        kc_late: 0.7
+      },
+      waterStressSensitivity: {
+        germination: 'alta',
+        flowering: 'alta',
+        fruiting: 'alta'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 40000, max: 80000, unit: 'plantas/ha' },
+      spacing: { row: 90, plant: 20, unit: 'cm' },
+      cultivationSystem: ['monocultivo'],
+      mechanizationLevel: 'mecanizado'
     }
   },
 
@@ -1047,6 +1597,67 @@ export const COMPREHENSIVE_CROPS_DATABASE: CropData[] = [
       localKnowledge: 'limitado',
       culturalAcceptance: 'média',
       foodSecurity: 'básica'
+    },
+    
+    phenology: {
+      stages: {
+        germination: 15,
+        vegetative: 120,
+        flowering: 60,
+        fruiting: 90,
+        maturation: 80
+      },
+      criticalPeriods: {
+        waterStress: ['estabelecimento', 'elongação'],
+        heatStress: ['elongação', 'maturação'],
+        coldStress: ['estabelecimento']
+      },
+      photoperiod: {
+        sensitivity: 'alta'
+      }
+    },
+    
+    timing: {
+      plantingWindows: {
+        primary: { start: 'outubro', end: 'dezembro', description: 'Época chuvosa' },
+        secondary: { start: 'março', end: 'maio', description: 'Segunda época' }
+      },
+      criticalMonths: ['novembro', 'dezembro', 'janeiro'],
+      harvestMonths: ['julho', 'setembro'],
+      offSeasonViability: 'possível'
+    },
+    
+    microclimate: {
+      temperatureStress: {
+        heatThreshold: 35,
+        coldThreshold: 15,
+        degreeDay: { base: 16, max: 32 }
+      },
+      humidityStress: {
+        lowThreshold: 70,
+        highThreshold: 90
+      }
+    },
+    
+    waterDynamics: {
+      evapotranspiration: {
+        kc_initial: 0.4,
+        kc_development: 1.0,
+        kc_mid: 1.3,
+        kc_late: 0.8
+      },
+      waterStressSensitivity: {
+        germination: 'alta',
+        flowering: 'média',
+        fruiting: 'alta'
+      }
+    },
+    
+    management: {
+      plantingDensity: { min: 60000, max: 100000, unit: 'plantas/ha' },
+      spacing: { row: 150, plant: 50, unit: 'cm' },
+      cultivationSystem: ['monocultivo'],
+      mechanizationLevel: 'mecanizado'
     }
   }
 ];
