@@ -301,66 +301,114 @@ export default function PreciseGPSSystem({ onLocationUpdate, onError }: PreciseG
   };
 
   return (
-    <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2 flex items-center">
-          🛰️ Sistema GPS Preciso
-        </h2>
-        <p className="text-gray-600 dark:text-gray-300 text-sm">
-          Obtenha sua localização exata usando GPS de alta precisão
-        </p>
-      </div>
-
-      {/* Botão para obter localização */}
-      <div className="mb-6">
-        <button
-          onClick={getCurrentLocationPrecise}
-          disabled={isLoading}
-          className={`w-full py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
-            isLoading
-              ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-              : 'bg-green-600 hover:bg-green-700 text-white shadow-md hover:shadow-lg'
-          }`}
-        >
-          {isLoading ? (
-            <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-              Obtendo localização precisa...
-            </div>
-          ) : (
-            '📍 Obter Localização GPS Precisa'
-          )}
-        </button>
-      </div>
-
-      {/* Status da permissão */}
-      {permissionStatus !== 'unknown' && (
-        <div className={`mb-4 p-3 rounded-lg ${
-          permissionStatus === 'granted' 
-            ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' 
-            : permissionStatus === 'denied'
-            ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-            : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800'
-        }`}>
-          <div className="flex items-center">
-            <span className="text-lg mr-2">
-              {permissionStatus === 'granted' ? '✅' : permissionStatus === 'denied' ? '❌' : '⚠️'}
-            </span>
-            <span className={`font-medium ${
-              permissionStatus === 'granted' 
-                ? 'text-green-700 dark:text-green-300' 
-                : permissionStatus === 'denied'
-                ? 'text-red-700 dark:text-red-300'
-                : 'text-yellow-700 dark:text-yellow-300'
-            }`}>
-              Permissão de localização: {
-                permissionStatus === 'granted' ? 'Concedida' :
-                permissionStatus === 'denied' ? 'Negada' : 'Pendente'
-              }
+    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* Header com gradiente */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 text-white">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <span className="text-2xl">🛰️</span>
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl lg:text-2xl font-bold mb-1">
+              Sistema GPS Preciso
+            </h2>
+            <p className="text-blue-100 text-sm lg:text-base">
+              Localização de alta precisão com tecnologia GPS avançada
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${
+              permissionStatus === 'granted' ? 'bg-green-300 animate-pulse' : 
+              permissionStatus === 'denied' ? 'bg-red-300' : 'bg-yellow-300'
+            }`}></div>
+            <span className="text-xs text-blue-200">
+              {permissionStatus === 'granted' ? 'GPS Autorizado' : 
+               permissionStatus === 'denied' ? 'GPS Negado' : 'GPS Pendente'}
             </span>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Conteúdo principal */}
+      <div className="p-6 space-y-6">
+
+        {/* Botão principal com design melhorado */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+          <button
+            onClick={getCurrentLocationPrecise}
+            disabled={isLoading}
+            className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 transform ${
+              isLoading
+                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed scale-95'
+                : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
+            }`}
+          >
+            {isLoading ? (
+              <div className="flex items-center justify-center gap-3">
+                <div className="relative">
+                  <div className="animate-spin rounded-full h-6 w-6 border-3 border-gray-300 border-t-white"></div>
+                  <div className="absolute inset-0 rounded-full h-6 w-6 border-3 border-transparent border-t-gray-100 animate-ping"></div>
+                </div>
+                <span>Obtendo localização precisa...</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-3">
+                <span className="text-lg">📍</span>
+                <span>Obter Localização GPS Precisa</span>
+              </div>
+            )}
+          </button>
+        </div>
+
+        {/* Status da permissão com design melhorado */}
+        {permissionStatus !== 'unknown' && (
+          <div className={`rounded-xl p-6 border ${
+            permissionStatus === 'granted' 
+              ? 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-green-200 dark:border-green-800' 
+              : permissionStatus === 'denied'
+              ? 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-900/20 dark:to-rose-900/20 border-red-200 dark:border-red-800'
+              : 'bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-800'
+          }`}>
+            <div className="flex items-start space-x-4">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                permissionStatus === 'granted' ? 'bg-green-100 dark:bg-green-800/50' :
+                permissionStatus === 'denied' ? 'bg-red-100 dark:bg-red-800/50' :
+                'bg-yellow-100 dark:bg-yellow-800/50'
+              }`}>
+                <span className="text-xl">
+                  {permissionStatus === 'granted' ? '✅' : permissionStatus === 'denied' ? '❌' : '⚠️'}
+                </span>
+              </div>
+              <div className="flex-1">
+                <h4 className={`font-semibold mb-2 ${
+                  permissionStatus === 'granted' 
+                    ? 'text-green-900 dark:text-green-300' 
+                    : permissionStatus === 'denied'
+                    ? 'text-red-900 dark:text-red-300'
+                    : 'text-yellow-900 dark:text-yellow-300'
+                }`}>
+                  Permissão de Localização: {
+                    permissionStatus === 'granted' ? 'Concedida' :
+                    permissionStatus === 'denied' ? 'Negada' : 'Pendente'
+                  }
+                </h4>
+                <p className={`text-sm ${
+                  permissionStatus === 'granted' 
+                    ? 'text-green-700 dark:text-green-400' 
+                    : permissionStatus === 'denied'
+                    ? 'text-red-700 dark:text-red-400'
+                    : 'text-yellow-700 dark:text-yellow-400'
+                }`}>
+                  {permissionStatus === 'granted' 
+                    ? 'GPS autorizado. Sistema pronto para obter localização precisa.'
+                    : permissionStatus === 'denied'
+                    ? 'Acesso negado. Verifique as configurações do navegador.'
+                    : 'Aguardando permissão. Clique no botão acima para autorizar.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
       {/* Informações da última localização */}
       {lastLocation && (
@@ -410,15 +458,37 @@ export default function PreciseGPSSystem({ onLocationUpdate, onError }: PreciseG
         </div>
       )}
 
-      {/* Dicas */}
-      <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <h4 className="font-medium text-blue-800 mb-2">💡 Dicas para Melhor Precisão:</h4>
-        <ul className="text-sm text-blue-700 space-y-1">
-          <li>• Ative o GPS e dados móveis/WiFi</li>
-          <li>• Vá para um local aberto (evite locais fechados)</li>
-          <li>• Aguarde alguns segundos para calibração</li>
-          <li>• Permita acesso à localização quando solicitado</li>
-        </ul>
+      {/* Dicas com design melhorado */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+        <div className="flex items-start space-x-4">
+          <div className="w-12 h-12 bg-blue-100 dark:bg-blue-800/50 rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-blue-600 dark:text-blue-400 text-xl">💡</span>
+          </div>
+          <div className="flex-1">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-300 mb-3">
+              Dicas para Melhor Precisão GPS
+            </h4>
+            <ul className="space-y-2 text-sm text-blue-700 dark:text-blue-400">
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                Ative o GPS e dados móveis/WiFi
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                Vá para um local aberto (evite locais fechados)
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                Aguarde alguns segundos para calibração
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                Permita acesso à localização quando solicitado
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
       </div>
     </div>
   );

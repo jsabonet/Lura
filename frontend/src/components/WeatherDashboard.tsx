@@ -14,6 +14,16 @@ import { useWeatherData } from '@/contexts/WeatherDataContext';
 import Image from 'next/image';
 import '@/styles/weather-dashboard.css';
 import { 
+  generateWeatherInsights,
+  getInsightTheme,
+  type AgricultureInsight
+} from '@/utils/agriculturalInsights';
+import { 
+  generateSeasonalWeatherInsights as generateProfessionalInsights,
+  generateAdvancedCropRecommendations
+} from '@/utils/advancedAgriculturalInsights';
+import CropSelector from './CropSelectorNew';
+import { 
   MapPinIcon, 
   CloudIcon, 
   SunIcon,
@@ -29,6 +39,7 @@ interface WeatherDashboardProps {
 
 export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
   const [showAdvancedData, setShowAdvancedData] = useState(false);
+  const [selectedCrops, setSelectedCrops] = useState<string[]>([]);
   
   const {
     location,
@@ -59,7 +70,7 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
   const displayWeather = externalWeatherData || currentWeather;
   const displayForecast = externalWeatherData?.forecast || weatherForecast;
   const displayLocation = externalWeatherData?.location || location;
-  const displayError = externalError || weatherError;
+  const displayError = externalError || (weatherError ? weatherError.message : null);
   const displayLoading = externalLoading || isWeatherLoading;
 
   const getTemperatureColor = (temp: number): string => {
@@ -260,7 +271,10 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
               {(displayLocation || location) && (
                 <div className="space-y-3">
                   <div className="text-base font-medium text-gray-900 dark:text-white">
-                    {displayLocation ? displayLocation.name : location?.address?.formatted}
+                    {displayLocation ? 
+                      ('name' in displayLocation ? displayLocation.name : (displayLocation as any).address?.formatted) : 
+                      'Localização disponível'
+                    }
                   </div>
                   
                   {displayLocation && (
@@ -308,19 +322,28 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                     <div className="bg-white dark:bg-gray-600 rounded-lg p-3">
                       <div className="text-gray-500 dark:text-gray-400 mb-1">Latitude</div>
                       <div className="font-mono font-semibold">
-                        {displayLocation ? displayLocation.lat.toFixed(6) : location?.coordinates.latitude.toFixed(6)}
+                        {displayLocation ? 
+                          ('lat' in displayLocation ? displayLocation.lat.toFixed(6) : (displayLocation as any).coordinates?.latitude?.toFixed(6)) : 
+                          (location as any)?.coordinates?.latitude?.toFixed(6)
+                        }
                       </div>
                     </div>
                     <div className="bg-white dark:bg-gray-600 rounded-lg p-3">
                       <div className="text-gray-500 dark:text-gray-400 mb-1">Longitude</div>
                       <div className="font-mono font-semibold">
-                        {displayLocation ? displayLocation.lng.toFixed(6) : location?.coordinates.longitude.toFixed(6)}
+                        {displayLocation ? 
+                          ('lng' in displayLocation ? displayLocation.lng.toFixed(6) : (displayLocation as any).coordinates?.longitude?.toFixed(6)) : 
+                          (location as any)?.coordinates?.longitude?.toFixed(6)
+                        }
                       </div>
                     </div>
                     <div className="bg-white dark:bg-gray-600 rounded-lg p-3">
                       <div className="text-gray-500 dark:text-gray-400 mb-1">País</div>
                       <div className="font-semibold">
-                        {displayLocation ? displayLocation.country : 'Moçambique'}
+                        {displayLocation ? 
+                          ('country' in displayLocation ? displayLocation.country : 'Moçambique') : 
+                          'Moçambique'
+                        }
                       </div>
                     </div>
                     <div className="bg-white dark:bg-gray-600 rounded-lg p-3">
@@ -462,14 +485,14 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                       <div className="bg-white/50 dark:bg-gray-600/30 rounded-lg p-3">
                         <span className="text-gray-600 dark:text-gray-400">Ponto de Orvalho:</span>
                         <div className="font-semibold text-gray-900 dark:text-white">
-                          {/* currentWeather.current.dew_point ? weatherUtils.formatTemperature(currentWeather.current.dew_point) : */ 'N/A'}
+                          {/* currentWeather?.current?.dew_point ? weatherUtils.formatTemperature(currentWeather?.current?.dew_point) : */ 'N/A'}
                         </div>
                       </div>
                       
                       <div className="bg-white/50 dark:bg-gray-600/30 rounded-lg p-3">
                         <span className="text-gray-600 dark:text-gray-400">Nebulosidade:</span>
                         <div className="font-semibold text-gray-900 dark:text-white">
-                          {/* currentWeather.current.clouds */ 'N/A'}%
+                          {/* currentWeather?.current?.clouds */ 'N/A'}%
                         </div>
                       </div>
                     </div>
@@ -480,30 +503,63 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
           )}
 
           {/* Previsão do Tempo */}
-          {displayForecast && displayForecast.length > 0 && (
+          {displayForecast && Array.isArray(displayForecast) && displayForecast.length > 0 && (
             <div className="mt-8">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 <CloudArrowUpIcon className="w-5 h-5" />
-                Previsão dos Próximos Dias
+                Previsão dos Próximos 7 Dias
+                {dataSource === 'regional' && (
+                  <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full">
+                    📍 Dados Regionais Específicos
+                  </span>
+                )}
               </h3>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-                {displayForecast.slice(0, 5).map((forecast: any, index: number) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-4">
+                {Array.isArray(displayForecast) ? displayForecast.slice(0, 7).map((forecast: any, index: number) => (
                   <div key={index} className="weather-card bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 text-center shadow-md">
                     <div className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 bg-gray-50 dark:bg-gray-700 rounded-lg py-1 px-2">
-                      {new Date(forecast.date || forecast.datetime).toLocaleDateString('pt-BR', { 
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short'
-                      })}
+                      {forecast.datetime ? 
+                        new Date(forecast.datetime).toLocaleDateString('pt-BR', { 
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short'
+                        }) : 
+                        forecast.date || 'Data inválida'
+                      }
                     </div>
                     
                     <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 rounded-full">
                       <div className="text-4xl">
-                        {forecast.description?.includes('chuva') || forecast.description?.includes('rain') ? '🌧️' :
-                         forecast.description?.includes('nuvem') || forecast.description?.includes('cloud') ? '☁️' :
-                         forecast.description?.includes('sol') || forecast.description?.includes('clear') ? '☀️' :
-                         '🌤️'}
+                        {(() => {
+                          const description = forecast.description?.toLowerCase() || '';
+                          const icon = forecast.icon || '';
+                          
+                          // Mapear baseado no código do ícone do OpenWeather e descrição
+                          if (icon.includes('01d')) return '☀️';  // clear sky day
+                          if (icon.includes('01n')) return '🌙';  // clear sky night
+                          if (icon.includes('02d')) return '⛅';  // few clouds day
+                          if (icon.includes('02n')) return '☁️';  // few clouds night
+                          if (icon.includes('03') || icon.includes('04')) return '☁️';  // scattered/broken clouds
+                          if (icon.includes('09')) return '🌦️';  // shower rain
+                          if (icon.includes('10d')) return '🌦️';  // rain day
+                          if (icon.includes('10n')) return '🌧️';  // rain night
+                          if (icon.includes('11')) return '⛈️';  // thunderstorm
+                          if (icon.includes('13')) return '�️';  // snow
+                          if (icon.includes('50')) return '🌫️';  // mist/fog
+                          
+                          // Fallback baseado na descrição
+                          if (description.includes('trovoada') || description.includes('thunder')) return '⛈️';
+                          if (description.includes('chuva forte') || description.includes('heavy rain')) return '🌧️';
+                          if (description.includes('chuva') || description.includes('rain') || description.includes('chuvisco')) return '🌦️';
+                          if (description.includes('neve') || description.includes('snow')) return '🌨️';
+                          if (description.includes('névoa') || description.includes('mist') || description.includes('fog')) return '🌫️';
+                          if (description.includes('nublado') || description.includes('nuvem') || description.includes('cloud')) return '☁️';
+                          if (description.includes('parcialmente nublado') || description.includes('partly cloudy')) return '⛅';
+                          if (description.includes('limpo') || description.includes('clear') || description.includes('sol')) return '☀️';
+                          
+                          return '🌤️'; // default partly sunny
+                        })()}
                       </div>
                     </div>
                     
@@ -534,117 +590,437 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                       </div>
                     </div>
                   </div>
-                ))}
+                )) : null}
               </div>
             </div>
           )}
 
-          {/* Insights Agrícolas */}
+          {/* Seletor de Culturas */}
+          {displayWeather && (
+            <div className="mt-8">
+              <CropSelector
+                selectedCrops={selectedCrops}
+                onCropSelect={setSelectedCrops}
+                currentRegion={(displayLocation as any)?.name}
+                className="mb-8"
+                userProfile="beginner"
+              />
+            </div>
+          )}
+
+          {/* Insights Agrícolas Personalizados */}
           {displayWeather && (
             <div className="mt-8">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                 🌾 Insights Agrícolas Personalizados
+                {selectedCrops.length > 0 && (
+                  <span className="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full">
+                    🎯 {selectedCrops.length} cultura{selectedCrops.length > 1 ? 's' : ''} selecionada{selectedCrops.length > 1 ? 's' : ''}
+                  </span>
+                )}
+                {dataSource === 'regional' && (
+                  <span className="ml-2 px-2 py-1 text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 rounded-full">
+                    📍 Específico para {(displayLocation as any)?.name || 'Região'}
+                  </span>
+                )}
+                {dataSource === 'gps' && (
+                  <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300 rounded-full">
+                    🛰️ Baseado em localização GPS
+                  </span>
+                )}
               </h3>
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Condições de Plantio */}
-                <div className="weather-card bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-xl p-5 border border-green-200 dark:border-green-700">
-                  <h4 className="font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
-                    🌱 Condições de Plantio
-                  </h4>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-green-700 dark:text-green-300">Umidade do Solo:</span>
-                      <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${
-                        currentWeather.current.humidity > 70 
-                          ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200' 
-                          : currentWeather.current.humidity > 40 
-                          ? 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200'
-                          : 'bg-red-200 text-red-800 dark:bg-red-800 dark:text-red-200'
-                      }`}>
-                        {currentWeather.current.humidity > 70 ? 'Ideal' : 
-                         currentWeather.current.humidity > 40 ? 'Moderada' : 'Baixa'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-green-700 dark:text-green-300">Temperatura:</span>
-                      <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${
-                        currentWeather.current.temperature >= 20 && currentWeather.current.temperature <= 30
-                          ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200' 
-                          : 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200'
-                      }`}>
-                        {currentWeather.current.temperature >= 20 && currentWeather.current.temperature <= 30 
-                          ? 'Ideal' : 'Atenção'}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-green-700 dark:text-green-300">Vento:</span>
-                      <span className={`px-2 py-1 rounded-lg text-xs font-semibold ${
-                        currentWeather.current.wind.speed < 15
-                          ? 'bg-green-200 text-green-800 dark:bg-green-800 dark:text-green-200' 
-                          : 'bg-yellow-200 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200'
-                      }`}>
-                        {currentWeather.current.wind.speed < 15 ? 'Favorável' : 'Forte'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              {(() => {
+                // Usar o sistema profissional de análise se há culturas selecionadas
+                if (selectedCrops.length > 0) {
+                  const professionalInsights = generateProfessionalInsights(
+                    {
+                      temperature: displayWeather.current.temperature,
+                      humidity: displayWeather.current.humidity,
+                      precipitation: 0, // Será expandido com dados reais de precipitação
+                      windSpeed: displayWeather.current.wind.speed,
+                      region: (displayLocation as any)?.name
+                    },
+                    selectedCrops
+                  );
 
-                {/* Recomendações */}
-                <div className="weather-card bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-5 border border-blue-200 dark:border-blue-700">
-                  <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
-                    💡 Recomendações
-                  </h4>
-                  
-                  <div className="space-y-3">
-                    {currentWeather.current.humidity < 40 && (
-                      <div className="flex items-start gap-2 p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                        <span className="text-yellow-600">⚠️</span>
-                        <div>
-                          <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">Irrigação Necessária</p>
-                          <p className="text-xs text-yellow-700 dark:text-yellow-400">Umidade baixa detectada. Considere irrigação.</p>
+                  if (professionalInsights.length === 0) {
+                    return (
+                      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-xl p-8 text-center">
+                        <div className="w-16 h-16 bg-green-100 dark:bg-green-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <span className="text-2xl">✅</span>
+                        </div>
+                        <h4 className="font-semibold text-green-900 dark:text-green-300 mb-2">
+                          Condições Ideais Detectadas
+                        </h4>
+                        <p className="text-sm text-green-700 dark:text-green-400">
+                          As condições climáticas atuais estão excelentes para suas culturas selecionadas. Continue com o manejo planejado!
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="space-y-6">
+                      {/* Análise Profissional Multidimensional */}
+                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-blue-100 dark:bg-blue-800/50 rounded-lg">
+                            <span className="text-blue-600 dark:text-blue-400 text-xl">🎯</span>
+                          </div>
+                          <h4 className="font-bold text-blue-900 dark:text-blue-300">
+                            Análise Profissional Multidimensional
+                          </h4>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {professionalInsights.map((insight: string, index: number) => {
+                            const isHighPriority = insight.includes('🔴') || insight.includes('⚠️');
+                            const isPositive = insight.includes('✅') || insight.includes('✨');
+                            
+                            return (
+                              <div
+                                key={index}
+                                className={`p-4 rounded-lg border ${
+                                  isHighPriority 
+                                    ? 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+                                    : isPositive 
+                                    ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+                                    : 'bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700'
+                                }`}
+                              >
+                                <p className={`text-sm font-medium ${
+                                  isHighPriority 
+                                    ? 'text-red-800 dark:text-red-300'
+                                    : isPositive 
+                                    ? 'text-green-800 dark:text-green-300'
+                                    : 'text-gray-800 dark:text-gray-300'
+                                }`}>
+                                  {insight}
+                                </p>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
-                    )}
-                    
-                    {currentWeather.current.wind.speed > 20 && (
-                      <div className="flex items-start gap-2 p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                        <span className="text-orange-600">🌪️</span>
-                        <div>
-                          <p className="text-sm font-medium text-orange-800 dark:text-orange-300">Vento Forte</p>
-                          <p className="text-xs text-orange-700 dark:text-orange-400">Evite pulverizações. Proteja culturas sensíveis.</p>
-                        </div>
+
+                      {/* Recomendações Detalhadas */}
+                      {(() => {
+                        const recommendations = generateAdvancedCropRecommendations(
+                          selectedCrops,
+                          {
+                            temperature: displayWeather.current.temperature,
+                            humidity: displayWeather.current.humidity,
+                            precipitation: 0, // Será expandido com dados reais de precipitação
+                            windSpeed: displayWeather.current.wind.speed,
+                            region: (displayLocation as any)?.name
+                          }
+                        );
+
+                        return (
+                          <div className="space-y-4">
+                            {recommendations.map((rec) => (
+                              <div
+                                key={rec.cropId}
+                                className={`border rounded-xl p-6 ${
+                                  rec.viabilityLevel === 'alta' 
+                                    ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800'
+                                    : rec.viabilityLevel === 'média'
+                                    ? 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800'
+                                    : rec.viabilityLevel === 'baixa'
+                                    ? 'bg-orange-50 border-orange-200 dark:bg-orange-900/20 dark:border-orange-800'
+                                    : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-4">
+                                  <h5 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                                    <span>🌱</span>
+                                    {rec.cropName}
+                                  </h5>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                                      rec.viabilityLevel === 'alta' 
+                                        ? 'bg-green-600 text-white'
+                                        : rec.viabilityLevel === 'média'
+                                        ? 'bg-yellow-600 text-white'
+                                        : rec.viabilityLevel === 'baixa'
+                                        ? 'bg-orange-600 text-white'
+                                        : 'bg-red-600 text-white'
+                                    }`}>
+                                      {rec.viabilityLevel === 'alta' ? 'Alta Viabilidade' :
+                                       rec.viabilityLevel === 'média' ? 'Viabilidade Média' :
+                                       rec.viabilityLevel === 'baixa' ? 'Baixa Viabilidade' :
+                                       'Não Recomendada'}
+                                    </span>
+                                    <span className="text-lg font-bold text-gray-700 dark:text-gray-300">
+                                      {rec.overallScore}%
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Scores por dimensão */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                                  <div className="text-center">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">Clima</div>
+                                    <div className={`font-bold ${rec.scores.climate >= 80 ? 'text-green-600' : rec.scores.climate >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                      {rec.scores.climate}%
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">Solo</div>
+                                    <div className={`font-bold ${rec.scores.soil >= 80 ? 'text-green-600' : rec.scores.soil >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                      {rec.scores.soil}%
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">Econômico</div>
+                                    <div className={`font-bold ${rec.scores.economic >= 80 ? 'text-green-600' : rec.scores.economic >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                      {rec.scores.economic}%
+                                    </div>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">Risco</div>
+                                    <div className={`font-bold ${rec.scores.risk >= 80 ? 'text-green-600' : rec.scores.risk >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                      {rec.scores.risk}%
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Análise detalhada */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {rec.analysis.strengths.length > 0 && (
+                                    <div>
+                                      <h6 className="font-semibold text-green-800 dark:text-green-300 mb-2 flex items-center gap-1">
+                                        <span>✅</span> Pontos Fortes
+                                      </h6>
+                                      <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                                        {rec.analysis.strengths.map((strength, idx) => (
+                                          <li key={idx} className="flex items-start gap-2">
+                                            <span className="text-green-500 mt-1">•</span>
+                                            {strength}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+
+                                  {rec.analysis.challenges.length > 0 && (
+                                    <div>
+                                      <h6 className="font-semibold text-orange-800 dark:text-orange-300 mb-2 flex items-center gap-1">
+                                        <span>⚠️</span> Desafios
+                                      </h6>
+                                      <ul className="text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                                        {rec.analysis.challenges.map((challenge, idx) => (
+                                          <li key={idx} className="flex items-start gap-2">
+                                            <span className="text-orange-500 mt-1">•</span>
+                                            {challenge}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Recomendações específicas */}
+                                {rec.analysis.recommendations.length > 0 && (
+                                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                    <h6 className="font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-1">
+                                      <span>💡</span> Recomendações
+                                    </h6>
+                                    <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+                                      {rec.analysis.recommendations.map((recommendation, idx) => (
+                                        <li key={idx} className="flex items-start gap-2">
+                                          <span className="text-blue-500 mt-1">→</span>
+                                          {recommendation}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {/* Dados econômicos */}
+                                <div className="mt-4 space-y-3">
+                                  {/* Investimento e Retorno */}
+                                  <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                      <span className="text-gray-600 dark:text-gray-400">Investimento estimado:</span>
+                                      <div className="font-semibold text-gray-900 dark:text-white">{rec.economics.estimatedInvestment}</div>
+                                    </div>
+                                    <div>
+                                      <span className="text-gray-600 dark:text-gray-400">Retorno esperado:</span>
+                                      <div className="font-semibold text-gray-900 dark:text-white">{rec.economics.expectedReturn}</div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Métricas Adicionais */}
+                                  {rec.economics.expectedProfit && (
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <span className="text-gray-600 dark:text-gray-400">Lucro esperado:</span>
+                                        <div className="font-semibold text-green-600 dark:text-green-400">{rec.economics.expectedProfit}</div>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-600 dark:text-gray-400">Margem de lucro:</span>
+                                        <div className="font-semibold text-gray-900 dark:text-white">{rec.economics.profitMargin}</div>
+                                      </div>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Indicadores de Confiança */}
+                                  {rec.economics.confidenceLevel && (
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <span className="text-gray-600 dark:text-gray-400">Nível de confiança:</span>
+                                        <div className="font-semibold text-blue-600 dark:text-blue-400">{rec.economics.confidenceLevel}</div>
+                                      </div>
+                                      <div>
+                                        <span className="text-gray-600 dark:text-gray-400">Retorno c/ risco:</span>
+                                        <div className="font-semibold text-gray-900 dark:text-white">{rec.economics.riskAdjustedReturn}</div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  );
+                }
+
+                // Fallback para o sistema original se não há culturas selecionadas
+                const insights = generateWeatherInsights(
+                  {
+                    temperature: displayWeather.current.temperature,
+                    humidity: displayWeather.current.humidity,
+                    wind: {
+                      speed: displayWeather.current.wind.speed,
+                      direction: typeof displayWeather.current.wind.direction === 'string'
+                        ? displayWeather.current.wind.direction
+                        : String(displayWeather.current.wind.direction)
+                    },
+                    pressure: displayWeather.current.pressure,
+                    uvIndex: (displayWeather.current as any).uvIndex,
+                    description: (displayWeather.current as any).description || ''
+                  },
+                  {
+                    name: (displayLocation as any)?.name || 'Moçambique',
+                    lat: (displayLocation as any)?.lat || -25.9653,
+                    lng: (displayLocation as any)?.lng || 32.5892
+                  },
+                  displayForecast as any,
+                  selectedCrops.length > 0 ? selectedCrops : undefined
+                );
+                if (!insights || insights.length === 0) {
+                  return (
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-8 text-center">
+                      <div className="w-16 h-16 bg-amber-100 dark:bg-amber-800/50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span className="text-2xl">🌱</span>
                       </div>
-                    )}
-                    
-                    {currentWeather.current.temperature > 35 && (
-                      <div className="flex items-start gap-2 p-3 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                        <span className="text-red-600">🌡️</span>
-                        <div>
-                          <p className="text-sm font-medium text-red-800 dark:text-red-300">Temperatura Elevada</p>
-                          <p className="text-xs text-red-700 dark:text-red-400">Monitore estresse hídrico nas plantas.</p>
+                      <h4 className="font-semibold text-amber-900 dark:text-amber-300 mb-2">
+                        {selectedCrops.length === 0 
+                          ? 'Selecione suas culturas para recomendações personalizadas'
+                          : 'Condições favoráveis - sem alertas específicos'
+                        }
+                      </h4>
+                      <p className="text-sm text-amber-700 dark:text-amber-400">
+                        {selectedCrops.length === 0 
+                          ? 'Use o seletor acima para escolher suas culturas e receber insights específicos para cada uma.'
+                          : 'As condições climáticas atuais estão adequadas para suas culturas selecionadas. Continue monitorando!'
+                        }
+                      </p>
+                    </div>
+                  );
+                }
+                return (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {insights.map((insight: AgricultureInsight) => {
+                      const theme = getInsightTheme(insight.type);
+                      return (
+                        <div 
+                          key={insight.id}
+                          className={`bg-gradient-to-br ${theme.bg} border ${theme.border} rounded-xl p-6 relative overflow-hidden`}
+                        >
+                          {/* Badge de prioridade */}
+                          {insight.priority === 'high' && (
+                            <div className="absolute top-3 right-3">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                                Urgente
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Badge de severidade crítica */}
+                          {insight.severity === 'critical' && (
+                            <div className="absolute top-3 right-3">
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-600 text-white animate-pulse">
+                                ⚠️ Crítico
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex items-start space-x-4">
+                            {/* Ícone */}
+                            <div className={`w-12 h-12 ${theme.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                              <span className="text-xl">{insight.icon}</span>
+                            </div>
+                            {/* Conteúdo */}
+                            <div className="flex-1">
+                              <h4 className={`font-semibold mb-2 ${theme.text}`}>
+                                {insight.title}
+                              </h4>
+                              <p className={`text-sm ${theme.subtext} mb-3`}>
+                                {insight.description}
+                              </p>
+                              {/* Culturas afetadas */}
+                              {insight.crops && insight.crops.length > 0 && (
+                                <div className="flex flex-wrap gap-1 mb-3">
+                                  {insight.crops.slice(0, 3).map((crop, index) => (
+                                    <span 
+                                      key={index}
+                                      className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-white/60 dark:bg-gray-800/40 ${theme.text}`}
+                                    >
+                                      {crop}
+                                    </span>
+                                  ))}
+                                  {insight.crops.length > 3 && (
+                                    <span className={`text-xs ${theme.subtext}`}>
+                                      +{insight.crops.length - 3} mais
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              {/* Categoria e timeline */}
+                              <div className="flex items-center justify-between">
+                                <span className={`text-xs uppercase font-medium tracking-wide ${theme.subtext}`}>
+                                  {insight.category === 'planting' && '🌱 Plantio'}
+                                  {insight.category === 'irrigation' && '💧 Irrigação'}
+                                  {insight.category === 'protection' && '🛡️ Proteção'}
+                                  {insight.category === 'harvest' && '🌾 Colheita'}
+                                  {insight.category === 'pest' && '🐛 Pragas'}
+                                  {insight.category === 'general' && '📋 Geral'}
+                                  {insight.category === 'compatibility' && '🎯 Adequação'}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  {insight.timeline && (
+                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded-md">
+                                      ⏱️ {insight.timeline}
+                                    </span>
+                                  )}
+                                  {insight.actionable && (
+                                    <span className="text-xs font-semibold text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/20 px-2 py-1 rounded-full">
+                                      Ação Requerida
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    
-                    {currentWeather.current.humidity > 70 && 
-                     currentWeather.current.temperature >= 20 && 
-                     currentWeather.current.temperature <= 30 && 
-                     currentWeather.current.wind.speed < 15 && (
-                      <div className="flex items-start gap-2 p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                        <span className="text-green-600">✅</span>
-                        <div>
-                          <p className="text-sm font-medium text-green-800 dark:text-green-300">Condições Ideais</p>
-                          <p className="text-xs text-green-700 dark:text-green-400">Excelente momento para atividades agrícolas.</p>
-                        </div>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           )}
 
