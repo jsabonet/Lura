@@ -135,7 +135,7 @@ class OpenWeatherService {
 
       const response: AxiosResponse<T> = await axios.get(url, {
         params: {
-          ...OPENWEATHER_CONFIG.DEFAULT_PARAMS,
+          ...OPENWEATHER_CONFIG.getDefaultParams(),
           ...params
         },
         headers: this.baseHeaders,
@@ -144,7 +144,15 @@ class OpenWeatherService {
 
       return response.data;
     } catch (error: any) {
-      console.error('❌ Erro na chamada da API OpenWeather:', error);
+      // Log detalhado do erro para depuração
+      console.error('❌ Erro na chamada da API OpenWeather:', {
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: url,
+        params: params
+      });
 
       if (error.response) {
         // Erro da API
@@ -338,7 +346,10 @@ class OpenWeatherService {
         forecast
       };
     } catch (error) {
-      console.error('❌ Erro ao obter dados climáticos completos:', error);
+      console.error('❌ Erro ao obter dados climáticos completos:', {
+        message: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error
+      });
       throw error;
     }
   }

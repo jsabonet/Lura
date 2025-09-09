@@ -38,12 +38,13 @@ export const OPENWEATHER_CONFIG = {
   BASE_URL: 'https://api.openweathermap.org/data/2.5',
   
   // Configurações padrão
-  DEFAULT_PARAMS: {
+  getDefaultParams: () => ({
     units: 'metric',      // Celsius, m/s, etc.
     lang: 'pt_br',        // Português brasileiro
-    appid: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
-  }
-};
+    appid: process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY || ''
+  })
+}
+
 
 // URLs específicas do OpenWeather
 export const OPENWEATHER_ENDPOINTS = {
