@@ -79,6 +79,12 @@ function ClimaPageContent() {
               >
                 Mercado
               </Link>
+              <Link
+                href="/alertas"
+                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+              >
+                Alertas
+              </Link>
             </div>
           </div>
         </div>

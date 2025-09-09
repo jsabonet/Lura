@@ -23,6 +23,7 @@ import {
   generateAdvancedCropRecommendations
 } from '@/utils/advancedAgriculturalInsights';
 import CropSelector from './CropSelectorNew';
+import { alertsService } from '@/services/alerts';
 import { 
   MapPinIcon, 
   CloudIcon, 
@@ -40,6 +41,9 @@ interface WeatherDashboardProps {
 export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
   const [showAdvancedData, setShowAdvancedData] = useState(false);
   const [selectedCrops, setSelectedCrops] = useState<string[]>([]);
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertContext, setAlertContext] = useState<{ cultura: string; regiao: string; lat?: number; lng?: number } | null>(null);
+  const [activationMsg, setActivationMsg] = useState<string | null>(null);
   
   const {
     location,
@@ -80,6 +84,36 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
     return 'text-red-600';
   };
 
+  const handleActivateAlert = async (cultura: string, regiao: string, lat?: number, lng?: number) => {
+    try {
+      // Verificar se já existe assinatura para cultura/região
+      const subs = await alertsService.list().catch(() => []);
+      const exists = Array.isArray(subs) && subs.find((s: any) => s.cultura === cultura && s.regiao === regiao);
+      if (exists) {
+        await alertsService.createOrUpdate({
+          cultura,
+          regiao,
+          latitude: lat,
+          longitude: lng,
+          canal: exists.canal,
+          ativo: true,
+          metadados: { origem: 'weather-dashboard', reativado: true },
+        } as any);
+        setActivationMsg('✅ Alerta já configurado foi reativado.');
+        setTimeout(() => setActivationMsg(null), 2500);
+        return;
+      }
+
+      // Abrir modal para configurar pela primeira vez
+      setAlertContext({ cultura, regiao, lat, lng });
+      setAlertModalOpen(true);
+    } catch (e) {
+      console.error('Falha ao ativar alerta:', e);
+      setAlertContext({ cultura, regiao, lat, lng });
+      setAlertModalOpen(true);
+    }
+  };
+
   if (!isInitialized && !externalWeatherData) {
     return (
       <div className={`${className}`}>
@@ -111,6 +145,13 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
 
   return (
     <div className={`weather-dashboard ${className} space-y-6`}>
+      {activationMsg && (
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="mb-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-300 rounded-lg p-3 text-sm">
+            {activationMsg}
+          </div>
+        </div>
+      )}
       {/* Header com Status */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 animated-gradient p-6 text-white">
@@ -819,6 +860,7 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                                     </div>
                                   )}
                                 </div>
+                                {/* Botão de ação ficará após os retornos (dados econômicos) */}
 
                                 {/* Recomendações específicas */}
                                 {rec.analysis.recommendations.length > 0 && (
@@ -878,6 +920,22 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                                       </div>
                                     </div>
                                   )}
+                                </div>
+                                {/* Ação: canto inferior direito da seção Análise detalhada, após os retornos */}
+                                <div className="mt-6 flex justify-end">
+                                  <button
+                                    onClick={() => {
+                                      const cultura = rec.cropName?.toLowerCase() || 'milho';
+                                      const regiao = (displayLocation as any)?.name || (displayLocation as any)?.address?.formatted || 'Moçambique';
+                                      const lat = (displayLocation as any)?.lat || (displayLocation as any)?.coordinates?.latitude;
+                                      const lng = (displayLocation as any)?.lng || (displayLocation as any)?.coordinates?.longitude;
+                                      handleActivateAlert(cultura, regiao, lat, lng);
+                                    }}
+                                    className="px-3 py-2 text-xs bg-blue-600 text-white rounded-full hover:bg-blue-700"
+                                    title="Ativar alerta para esta cultura e região"
+                                  >
+                                    🔔 Ativar Alerta
+                                  </button>
                                 </div>
                               </div>
                             ))}
@@ -1011,6 +1069,19 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                                       Ação Requerida
                                     </span>
                                   )}
+                                    {/* Botão para ativar alerta baseado nesta análise */}
+                                    <button
+                                      onClick={() => {
+                                        const cultura = (insight.crops && insight.crops[0]) || (selectedCrops[0] || 'milho');
+                                        const regiao = (displayLocation as any)?.name || (displayLocation as any)?.address?.formatted || 'Moçambique';
+                                        const lat = (displayLocation as any)?.lat || (displayLocation as any)?.coordinates?.latitude;
+                                        const lng = (displayLocation as any)?.lng || (displayLocation as any)?.coordinates?.longitude;
+                                        handleActivateAlert(cultura, regiao, lat, lng);
+                                      }}
+                                      className="text-xs font-medium bg-blue-600 text-white px-2 py-1 rounded-full hover:bg-blue-700"
+                                    >
+                                      🔔 Ativar Alerta
+                                    </button>
                                 </div>
                               </div>
                             </div>
@@ -1038,6 +1109,29 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
           )}
         </div>
       </div>
+
+      {/* Modal de ativação */}
+      {alertModalOpen && alertContext && (
+        <AlertActivationModal
+          isOpen={alertModalOpen}
+          onClose={() => setAlertModalOpen(false)}
+          cultura={alertContext.cultura}
+          regiao={alertContext.regiao}
+          latitude={alertContext.lat}
+          longitude={alertContext.lng}
+        />
+      )}
     </div>
   );
 }
+
+// Modal de ativação (lazy import simples)
+import dynamic from 'next/dynamic';
+const AlertActivationModal = dynamic(() => import('@/components/alerts/AlertActivationModal'), { ssr: false });
+
+// Render modal
+export function WeatherDashboardWithModal(props: WeatherDashboardProps) {
+  // Delegate to original and rely on its internal state for modal rendering
+  return <WeatherDashboard {...props} />;
+}
+
