@@ -21,9 +21,6 @@ requests==2.31.0
 twilio==8.10.0
 Pillow==10.0.1
 
-# Processamento de imagens (usado em pragas/models.py)
-Pillow==10.0.0
-
 # Variáveis de ambiente
 python-dotenv==1.0.0
 python-decouple==3.8
