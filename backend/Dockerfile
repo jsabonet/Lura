@@ -37,9 +37,6 @@ RUN addgroup -g 1001 -S app \
     && chown -R app:app /app
 USER app
 
-# Coletar arquivos estáticos
-RUN python manage.py collectstatic --noinput
-
 # Expor porta
 EXPOSE 8000
 
