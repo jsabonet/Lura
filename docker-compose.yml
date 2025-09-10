@@ -77,27 +77,27 @@ services:
       retries: 3
 
   # Celery Worker (Para processamento IA futuro)
-  celery:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: celery -A agroalerta worker -l info
-    environment:
-      - DEBUG=False
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/agroalerta
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-    volumes:
-      - ./backend:/app
-      - models_volume:/app/models
-    deploy:
-      resources:
-        reservations:
-          memory: 1G
+  # celery:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   command: celery -A lurafarm worker -l info
+  #   environment:
+  #     - DEBUG=False
+  #     - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/lurafarm
+  #     - REDIS_URL=redis://redis:6379/0
+  #     - CELERY_BROKER_URL=redis://redis:6379/0
+  #   depends_on:
+  #     - db
+  #     - redis
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./backend:/app
+  #     - models_volume:/app/models
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         memory: 1G
 
   # Nginx Reverse Proxy
   nginx:
