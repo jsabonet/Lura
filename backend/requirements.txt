@@ -17,6 +17,10 @@ whitenoise==6.6.0
 python-decouple==3.8
 requests==2.31.0
 
+# Serviços externos
+twilio==8.10.0
+Pillow==10.0.1
+
 # APIs externas (usado no clima/views.py)
 requests==2.31.0
 
