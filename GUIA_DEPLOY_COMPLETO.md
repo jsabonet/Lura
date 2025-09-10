@@ -74,8 +74,8 @@ systemctl start fail2ban
 
 ```bash
 # Criar diretório
-mkdir -p /var/www/agroalerta
-cd /var/www/agroalerta
+mkdir -p /var/www/lurafarm
+cd /var/www/lurafarm
 
 # Clonar repositório
 git clone https://github.com/jsabonet/Lura.git .
@@ -101,6 +101,16 @@ CORS_ALLOWED_ORIGINS=https://seudominio.com,https://www.seudominio.com
 ### **4. Deploy Inicial**
 
 ```bash
+# Usar script de correção automática (recomendado)
+chmod +x fix_deploy.sh
+./fix_deploy.sh
+
+# OU fazer manualmente:
+
+# Criar arquivo .env (obrigatório)
+cp .env.example .env
+nano .env  # Editar com suas configurações
+
 # Build e iniciar containers
 docker-compose build --no-cache
 docker-compose up -d
@@ -303,14 +313,25 @@ Domínio: ~$12/ano (separado)
 ### **Problemas Comuns:**
 
 ```bash
-# Container não sobe
+# Erro TypeScript no build do frontend
+cd frontend
+npm install  # Instalar todas as dependências
+npm run build  # Testar build local
+cd ..
+
+# Container não sube
 docker-compose logs nome_do_container
+
+# Erro POSTGRES_PASSWORD não definido
+cp .env.example .env
+nano .env  # Configurar POSTGRES_PASSWORD
 
 # Aplicação não responde
 docker-compose restart nginx
+docker-compose logs nginx
 
 # Erro de permissão
-chown -R 1001:1001 /var/www/agroalerta
+chown -R 1001:1001 /var/www/lurafarm
 
 # SSL não funciona
 certbot certificates
@@ -319,6 +340,13 @@ systemctl status nginx
 # Performance lenta
 docker stats
 htop
+
+# Build muito lento
+docker system prune -f  # Limpar cache
+docker-compose build --no-cache
+
+# Usar script de correção automática
+./fix_deploy.sh
 ```
 
 **Em caso de problemas, sempre verificar logs primeiro!** 📝
