@@ -13,16 +13,13 @@ dj-database-url==2.1.0
 gunicorn==21.2.0
 whitenoise==6.6.0
 
-# Configuração e requests
+# Configuração e HTTP requests
 python-decouple==3.8
 requests==2.31.0
 
 # Serviços externos
 twilio==8.10.0
 Pillow==10.0.1
-
-# APIs externas (usado no clima/views.py)
-requests==2.31.0
 
 # Processamento de imagens (usado em pragas/models.py)
 Pillow==10.0.0
