@@ -1,9 +1,10 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics
 from .services.twilio_service import twilio_service
-from .models import Notificacao
+from .models import Notificacao, AlertSubscription
+from .serializers import AlertSubscriptionSerializer
 from users.models import User
 # from clima.services.openweather_service import openweather_service  # Comentado até implementar
 from datetime import datetime, timedelta
@@ -402,3 +403,45 @@ def gerar_alertas_personalizados(user):
             alertas.extend(gerar_alertas_plantio(cultura, user.localizacao))
     
     return alertas
+
+# Alert Subscription Views
+class AlertSubscriptionListCreateView(generics.ListCreateAPIView):
+    serializer_class = AlertSubscriptionSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return AlertSubscription.objects.filter(usuario=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        # Implementar lógica de create-or-update como no frontend
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        cultura = serializer.validated_data['cultura']
+        regiao = serializer.validated_data['regiao']
+        
+        # Tentar encontrar assinatura existente
+        subscription, created = AlertSubscription.objects.get_or_create(
+            usuario=request.user,
+            cultura=cultura,
+            regiao=regiao,
+            defaults=serializer.validated_data
+        )
+        
+        if not created:
+            # Atualizar se já existe
+            for attr, value in serializer.validated_data.items():
+                setattr(subscription, attr, value)
+            subscription.save()
+        
+        response_serializer = self.get_serializer(subscription)
+        status_code = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        
+        return Response(response_serializer.data, status=status_code)
+
+class AlertSubscriptionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = AlertSubscriptionSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return AlertSubscription.objects.filter(usuario=self.request.user)

@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Para produção - build standalone
+  output: 'standalone',
   // Configuração de imagens para APIs externas
   images: {
     remotePatterns: [

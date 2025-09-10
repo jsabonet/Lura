@@ -5,15 +5,16 @@ export interface LoginCredentials {
   password: string;
 }
 
+
 export interface RegisterData {
   username: string;
   email: string;
   password: string;
-  password2: string;
+  password_confirm: string;
   first_name: string;
   last_name: string;
   telefone?: string;
-  tipo_usuario: 'agricultor' | 'tecnico' | 'admin';
+  tipo_usuario?: 'agricultor' | 'tecnico' | 'admin';
   localizacao?: string;
   provincia?: string;
   distrito?: string;
@@ -65,7 +66,8 @@ class AuthService {
   }
 
   async register(userData: RegisterData) {
-    return apiService.post<User>('/users/register/', userData);
+  // Backend expects `password_confirm` field; send data as-is
+  return apiService.post<User>('/users/register/', userData);
   }
 
   async getCurrentUser() {

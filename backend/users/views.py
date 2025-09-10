@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .models import User, PerfilAgricultor
-from .serializers import UserSerializer, PerfilAgricultorSerializer, UserRegistrationSerializer
+from .serializers import UserSerializer, PerfilAgricultorSerializer, UserRegistrationSerializer, UserUpdateSerializer
 
 class UserRegistrationView(generics.CreateAPIView):
     queryset = User.objects.all()
@@ -52,11 +52,15 @@ def login_view(request):
     }, status=status.HTTP_400_BAD_REQUEST)
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
     
     def get_object(self):
         return self.request.user
+    
+    def get_serializer_class(self):
+        if self.request.method in ['PUT', 'PATCH']:
+            return UserUpdateSerializer
+        return UserSerializer
 
 class PerfilAgricultorView(generics.RetrieveUpdateAPIView):
     serializer_class = PerfilAgricultorSerializer

@@ -5,7 +5,9 @@ from .api_views import (
     listar_notificacoes_view,
     marcar_lida_view,
     teste_twilio_view,
-    alertas_inteligentes_view
+    alertas_inteligentes_view,
+    AlertSubscriptionListCreateView,
+    AlertSubscriptionDetailView
 )
 
 app_name = 'notificacoes'
@@ -18,4 +20,8 @@ urlpatterns = [
     
     # Novo endpoint de alertas inteligentes
     path('alertas-inteligentes/', alertas_inteligentes_view, name='alertas-inteligentes'),
+    
+    # Alert Subscriptions endpoints
+    path('assinaturas/', AlertSubscriptionListCreateView.as_view(), name='alert-subscriptions'),
+    path('assinaturas/<int:pk>/', AlertSubscriptionDetailView.as_view(), name='alert-subscription-detail'),
 ]

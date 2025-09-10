@@ -16,20 +16,34 @@ export interface AlertSubscription {
   atualizado_em?: string;
 }
 
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 export const alertsService = {
   async list(): Promise<AlertSubscription[]> {
-    const res = await apiService.get<AlertSubscription[]>('/notificacoes/assinaturas/');
-    if (res.data) return res.data;
+    const res = await apiService.get<PaginatedResponse<AlertSubscription>>('/notificacoes/assinaturas/');
+    if (res.data !== undefined) {
+      // Handle paginated response from Django Rest Framework
+      if ('results' in res.data) {
+        return res.data.results;
+      }
+      // Handle direct array response (fallback)
+      return Array.isArray(res.data) ? res.data : [];
+    }
     throw new Error(res.error || 'Erro ao listar assinaturas');
   },
   async createOrUpdate(payload: Omit<AlertSubscription, 'id'>): Promise<AlertSubscription> {
     const res = await apiService.post<AlertSubscription>('/notificacoes/assinaturas/', payload);
-    if (res.data) return res.data;
+    if (res.data !== undefined) return res.data;
     throw new Error(res.error || 'Erro ao salvar assinatura');
   },
   async update(id: number, payload: Partial<AlertSubscription>): Promise<AlertSubscription> {
     const res = await apiService.put<AlertSubscription>(`/notificacoes/assinaturas/${id}/`, payload);
-    if (res.data) return res.data;
+    if (res.data !== undefined) return res.data;
     throw new Error(res.error || 'Erro ao atualizar assinatura');
   },
   async remove(id: number): Promise<void> {

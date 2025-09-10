@@ -35,12 +35,54 @@ class ApiService {
         ...options,
       });
 
-      const data = response.ok ? await response.json() : null;
+      let data: any = null;
+      let errorText: string | undefined = undefined;
+
+      // Try to parse JSON always; fall back to text if needed
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        try {
+          data = await response.json();
+        } catch (e) {
+          // ignore parse errors; data remains null
+        }
+      } else {
+        try {
+          const text = await response.text();
+          if (text) {
+            // Attempt to parse as JSON first
+            try {
+              data = JSON.parse(text);
+            } catch {
+              errorText = text;
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+
+      if (!response.ok) {
+        // Prefer DRF-style error messages if present
+        if (data && typeof data === 'object') {
+          const details: string[] = [];
+          for (const [key, value] of Object.entries(data)) {
+            if (Array.isArray(value)) {
+              details.push(`${key}: ${value.join(', ')}`);
+            } else if (typeof value === 'string') {
+              details.push(`${key}: ${value}`);
+            } else {
+              details.push(`${key}: ${JSON.stringify(value)}`);
+            }
+          }
+          errorText = details.length ? details.join(' | ') : errorText;
+        }
+      }
 
       return {
-        data: data as T,
+        data: response.ok ? (data as T) : undefined,
         status: response.status,
-        error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`,
+        error: response.ok ? undefined : (errorText || `HTTP ${response.status}: ${response.statusText}`),
       };
     } catch (error) {
       return {

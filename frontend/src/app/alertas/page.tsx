@@ -19,9 +19,10 @@ export default function AlertasPage() {
     try {
       setIsLoading(true);
       const data = await alertsService.list();
-      setSubs(data);
+      setSubs(Array.isArray(data) ? data : []);
     } catch (e: any) {
       setError(e?.message || 'Erro ao carregar');
+      setSubs([]); // Ensure subs is always an array
     } finally {
       setIsLoading(false);
     }

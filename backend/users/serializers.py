@@ -13,6 +13,15 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'data_criacao']
 
+class UserUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'telefone', 'first_name', 'last_name', 'localizacao', 
+            'provincia', 'distrito', 'culturas_interesse', 
+            'receber_sms', 'receber_whatsapp'
+        ]
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True)

@@ -108,6 +108,28 @@ class LogEnvio(models.Model):
     def __str__(self):
         return f"Log {self.notificacao.id} - Tentativa {self.tentativa}"
 
+class AlertSubscription(models.Model):
+    """Modelo para assinaturas de alertas por cultura e região"""
+    CANAL_CHOICES = [
+        ('sms', 'SMS'),
+        ('whatsapp', 'WhatsApp'),
+    ]
+    
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, related_name='alert_subscriptions')
+    cultura = models.CharField(max_length=100)
+    regiao = models.CharField(max_length=100)
+    canal = models.CharField(max_length=20, choices=CANAL_CHOICES, default='sms')
+    ativo = models.BooleanField(default=True)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['usuario', 'cultura', 'regiao']
+        ordering = ['-data_criacao']
+    
+    def __str__(self):
+        return f"{self.usuario.username} - {self.cultura} em {self.regiao}"
+
 class CampanhaNotificacao(models.Model):
     nome = models.CharField(max_length=200)
     descricao = models.TextField(blank=True)
