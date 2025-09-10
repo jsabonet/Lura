@@ -8,7 +8,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://api.seudominio.com
+      - NEXT_PUBLIC_API_URL=https://api.lurafarm.com
     depends_on:
       - backend
     restart: unless-stopped
@@ -28,18 +28,14 @@ services:
     environment:
       - DEBUG=False
       - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/lurafarm
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - ALLOWED_HOSTS=localhost,127.0.0.1,seudominio.com,*.seudominio.com
+      - ALLOWED_HOSTS=localhost,127.0.0.1,lurafarm.com,*.lurafarm.com
     depends_on:
       - db
-      - redis
     restart: unless-stopped
     volumes:
       - ./backend:/app
       - static_volume:/app/staticfiles
       - media_volume:/app/media
-      - models_volume:/app/models  # Para modelos IA futuros
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
       interval: 30s
@@ -52,7 +48,7 @@ services:
     environment:
       - POSTGRES_DB=lurafarm
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=${1Jossilene}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups  # Para backups automáticos
@@ -62,42 +58,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Redis (Cache + Queue para IA)
-  redis:
-    image: redis:7-alpine
-    volumes:
-      - redis_data:/data
-    restart: unless-stopped
-    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Celery Worker (Para processamento IA futuro)
-  celery:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: celery -A agroalerta worker -l info
-    environment:
-      - DEBUG=False
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/agroalerta
-      - REDIS_URL=redis://redis:6379/0
-      - CELERY_BROKER_URL=redis://redis:6379/0
-    depends_on:
-      - db
-      - redis
-    restart: unless-stopped
-    volumes:
-      - ./backend:/app
-      - models_volume:/app/models
-    deploy:
-      resources:
-        reservations:
-          memory: 1G
 
   # Nginx Reverse Proxy
   nginx:
@@ -116,23 +76,10 @@ services:
       - backend
     restart: unless-stopped
 
-  # Monitoring (Opcional)
-  portainer:
-    image: portainer/portainer-ce:latest
-    ports:
-      - "9000:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-    restart: unless-stopped
-
 volumes:
   postgres_data:
-  redis_data:
   static_volume:
   media_volume:
-  models_volume:  # Para modelos IA
-  portainer_data:
 
 networks:
   default:
