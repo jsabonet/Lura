@@ -1,0 +1,49 @@
+FROM python:3.11-alpine
+
+# Instalar dependências do sistema necessárias
+RUN apk update && apk add --no-cache \
+        postgresql-dev \
+        gcc \
+        g++ \
+        musl-dev \
+        libffi-dev \
+        jpeg-dev \
+        zlib-dev \
+        && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# Copiar requirements
+COPY requirements.txt .
+
+# Atualizar pip
+RUN pip install --upgrade pip
+
+# Instalar dependências Python (instalação por lotes para otimizar)
+RUN pip install --no-cache-dir \
+    Django==4.2.7 \
+    djangorestframework==3.14.0 \
+    djangorestframework-simplejwt==5.3.0 \
+    django-cors-headers==4.3.1 \
+    psycopg2-binary==2.9.9 \
+    dj-database-url==2.1.0 \
+    gunicorn==21.2.0 \
+    whitenoise==6.6.0 \
+    python-decouple==3.8 \
+    requests==2.31.0
+
+# Instalar twilio e Pillow separadamente para evitar conflitos
+RUN pip install --no-cache-dir twilio==8.10.0
+RUN pip install --no-cache-dir Pillow==10.0.1
+
+# Copiar código da aplicação
+COPY . .
+
+# Criar diretórios necessários
+RUN mkdir -p staticfiles media
+
+# Expor porta
+EXPOSE 8000
+
+# Comando para iniciar a aplicação
+CMD ["gunicorn", "agroalerta.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
