@@ -301,18 +301,18 @@ export default function PreciseGPSSystem({ onLocationUpdate, onError }: PreciseG
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {/* Header com gradiente */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 text-white">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-            <span className="text-2xl">🛰️</span>
+    <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* Header com gradiente - Mobile Optimized */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 p-4 sm:p-6 text-white">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <span className="text-xl sm:text-2xl">🛰️</span>
           </div>
-          <div className="flex-1">
-            <h2 className="text-xl lg:text-2xl font-bold mb-1">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 leading-tight">
               Sistema GPS Preciso
             </h2>
-            <p className="text-blue-100 text-sm lg:text-base">
+            <p className="text-blue-100 text-xs sm:text-sm lg:text-base line-clamp-2">
               Localização de alta precisão com tecnologia GPS avançada
             </p>
           </div>
@@ -329,32 +329,34 @@ export default function PreciseGPSSystem({ onLocationUpdate, onError }: PreciseG
         </div>
       </div>
 
-      {/* Conteúdo principal */}
-      <div className="p-6 space-y-6">
+      {/* Conteúdo principal - Mobile Optimized */}
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
 
-        {/* Botão principal com design melhorado */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+        {/* Botão principal com design melhorado - Mobile Optimized */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-600">
           <button
             onClick={getCurrentLocationPrecise}
             disabled={isLoading}
-            className={`w-full py-4 px-6 rounded-xl font-semibold transition-all duration-300 transform ${
+            className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 transform text-sm sm:text-base ${
               isLoading
                 ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed scale-95'
                 : 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl hover:scale-105 active:scale-95'
             }`}
           >
             {isLoading ? (
-              <div className="flex items-center justify-center gap-3">
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
                 <div className="relative">
-                  <div className="animate-spin rounded-full h-6 w-6 border-3 border-gray-300 border-t-white"></div>
-                  <div className="absolute inset-0 rounded-full h-6 w-6 border-3 border-transparent border-t-gray-100 animate-ping"></div>
+                  <div className="animate-spin rounded-full h-4 w-4 sm:h-6 sm:w-6 border-3 border-gray-300 border-t-white"></div>
+                  <div className="absolute inset-0 rounded-full h-4 w-4 sm:h-6 sm:w-6 border-3 border-transparent border-t-gray-100 animate-ping"></div>
                 </div>
-                <span>Obtendo localização precisa...</span>
+                <span className="hidden sm:inline">Obtendo localização precisa...</span>
+                <span className="sm:hidden">Obtendo GPS...</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center gap-3">
-                <span className="text-lg">📍</span>
-                <span>Obter Localização GPS Precisa</span>
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                <span className="text-base sm:text-lg">📍</span>
+                <span className="hidden sm:inline">Obter Localização GPS Precisa</span>
+                <span className="sm:hidden">GPS Preciso</span>
               </div>
             )}
           </button>

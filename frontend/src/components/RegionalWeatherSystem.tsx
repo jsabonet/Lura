@@ -150,18 +150,18 @@ const RegionalWeatherSystem: React.FC<RegionalWeatherSystemProps> = ({ apiKey })
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-      {/* Header com gradiente */}
-      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-6 text-white">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
-            <span className="text-2xl">🗺️</span>
+    <div className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      {/* Header com gradiente - Mobile Optimized */}
+      <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 p-4 sm:p-6 text-white">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center backdrop-blur-sm">
+            <span className="text-xl sm:text-2xl">🗺️</span>
           </div>
-          <div className="flex-1">
-            <h3 className="text-xl lg:text-2xl font-bold mb-1">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1 leading-tight">
               Sistema Regional Avançado
             </h3>
-            <p className="text-emerald-100 text-sm lg:text-base">
+            <p className="text-emerald-100 text-xs sm:text-sm lg:text-base line-clamp-2">
               Precisão climática por província e distrito de Moçambique
             </p>
           </div>
@@ -172,31 +172,31 @@ const RegionalWeatherSystem: React.FC<RegionalWeatherSystemProps> = ({ apiKey })
         </div>
       </div>
 
-      {/* Conteúdo principal */}
-      <div className="p-6 space-y-6">
-        {/* Seletor de Região com design melhorado */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-600">
+      {/* Conteúdo principal - Mobile Optimized */}
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+        {/* Seletor de Região com design melhorado - Mobile Optimized */}
+        <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-gray-200 dark:border-gray-600">
           <RegionSelector
             onRegionSelect={handleRegionSelect}
             selectedProvince={selectedProvince}
             selectedDistrict={selectedDistrict}
-            className="max-w-2xl"
+            className="w-full"
           />
         </div>
 
-        {/* Status de Carregamento com design melhorado */}
+        {/* Status de Carregamento com design melhorado - Mobile Optimized */}
         {isLoading && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
-            <div className="flex items-center justify-center space-x-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg sm:rounded-xl p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-4">
               <div className="relative">
-                <div className="animate-spin rounded-full h-8 w-8 border-4 border-blue-200 border-t-blue-600"></div>
-                <div className="absolute inset-0 rounded-full h-8 w-8 border-4 border-transparent border-t-blue-400 animate-ping"></div>
+                <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-4 border-blue-200 border-t-blue-600"></div>
+                <div className="absolute inset-0 rounded-full h-6 w-6 sm:h-8 sm:w-8 border-4 border-transparent border-t-blue-400 animate-ping"></div>
               </div>
               <div className="text-center">
-                <div className="text-blue-800 dark:text-blue-300 font-medium">
+                <div className="text-blue-800 dark:text-blue-300 font-medium text-sm sm:text-base">
                   Carregando dados climáticos
                 </div>
-                <div className="text-sm text-blue-600 dark:text-blue-400">
+                <div className="text-xs sm:text-sm text-blue-600 dark:text-blue-400">
                   {selectedDistrict || selectedProvince}
                 </div>
               </div>
