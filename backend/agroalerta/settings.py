@@ -96,7 +96,7 @@ DATABASES = {
         'NAME': config('DB_NAME', default='agroalerta'),
         'USER': config('DB_USER', default='postgres'),
         'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
+        'HOST': config('DB_HOST', default='db'),  # Container name em Docker
         'PORT': config('DB_PORT', default='5432'),
     }
 }
