@@ -114,13 +114,33 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf
       - ./ssl:/etc/nginx/ssl
+      # Webroot for ACME HTTP-01 challenges
+      - certbot_www:/var/www/certbot
       - static_volume:/var/www/static
       - media_volume:/var/www/media
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      # Let's Encrypt certs (read-only in nginx, writable in certbot)
+      - letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - frontend
       - backend
     restart: unless-stopped
+
+  # Certbot for Let's Encrypt certificates (one-shot issuance; run manually)
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    depends_on:
+      - nginx
+    environment:
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+    entrypoint: /bin/sh -c
+    command: >-
+      "sleep 3 && certbot certonly --webroot -w /var/www/certbot \
+      -d lurafarm.com -d www.lurafarm.com \
+      --email ${CERTBOT_EMAIL} --agree-tos --non-interactive --keep-until-expiring"
+    restart: "no"
 
   # Monitoring (Opcional)
   portainer:
@@ -139,6 +159,8 @@ volumes:
   media_volume:
   models_volume:  # Para modelos IA
   portainer_data:
+  certbot_www:
+  letsencrypt:
 
 networks:
   default:
