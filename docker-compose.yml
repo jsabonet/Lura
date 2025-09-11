@@ -8,7 +8,11 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=https://api.seudominio.com
+      - NEXT_PUBLIC_API_URL=/api
+      - NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+      - NEXT_PUBLIC_OPENWEATHER_API_KEY=${NEXT_PUBLIC_OPENWEATHER_API_KEY}
+    env_file:
+      - .env
     depends_on:
       - backend
     restart: unless-stopped
@@ -29,7 +33,7 @@ services:
       - DEBUG=False
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
-      - ALLOWED_HOSTS=localhost,127.0.0.1,seudominio.com,*.seudominio.com
+  - ALLOWED_HOSTS=localhost,127.0.0.1,68.183.211.15,seudominio.com,*.seudominio.com
     env_file:
       - .env
     depends_on:
