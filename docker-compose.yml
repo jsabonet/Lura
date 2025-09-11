@@ -33,7 +33,7 @@ services:
       - DEBUG=False
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
-  - ALLOWED_HOSTS=localhost,127.0.0.1,68.183.211.15,seudominio.com,*.seudominio.com
+      - ALLOWED_HOSTS=localhost,127.0.0.1,68.183.211.15,lurafarm.com,www.lurafarm.com,*.lurafarm.com
     env_file:
       - .env
     depends_on:
