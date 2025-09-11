@@ -1,4 +1,5 @@
 from rest_framework import generics, status, permissions
+import logging
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -29,10 +30,14 @@ class UserRegistrationView(generics.CreateAPIView):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def login_view(request):
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    if username and password:
+    logger = logging.getLogger(__name__)
+    try:
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response({'error': 'Username e password são obrigatórios'}, status=status.HTTP_400_BAD_REQUEST)
+
         user = authenticate(username=username, password=password)
         if user:
             refresh = RefreshToken.for_user(user)
@@ -42,14 +47,12 @@ def login_view(request):
                 'access': str(refresh.access_token),
                 'message': 'Login realizado com sucesso'
             })
-        else:
-            return Response({
-                'error': 'Credenciais inválidas'
-            }, status=status.HTTP_401_UNAUTHORIZED)
-    
-    return Response({
-        'error': 'Username e password são obrigatórios'
-    }, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'error': 'Credenciais inválidas'}, status=status.HTTP_401_UNAUTHORIZED)
+
+    except Exception as exc:
+        # Loga o erro para análise nos logs do backend sem expor detalhes ao cliente
+        logger.exception("Erro inesperado no login_view")
+        return Response({'error': 'Erro interno no servidor'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [permissions.IsAuthenticated]
