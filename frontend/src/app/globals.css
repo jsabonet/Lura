@@ -1,9 +1,11 @@
 @import "tailwindcss";
 @import "../styles/weather-dashboard.css";
 
+/* Forçar light mode para evitar mudanças no mobile */
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  color-scheme: light;
 }
 
 @theme inline {
@@ -11,13 +13,21 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  
+  /* Garantir classes críticas para modais e gradientes */
+  --color-green-50: #f0fdf4;
+  --color-green-500: #22c55e;
+  --color-green-600: #16a34a;
+  --color-green-700: #15803d;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Manter dark mode apenas se explicitamente ativado via classe */
+html.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
 body {
