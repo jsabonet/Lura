@@ -36,22 +36,23 @@ sleep 30
 # 5. Verificar se variáveis foram carregadas
 echo ""
 echo "🔍 Verificando variáveis no container:"
-docker-compose exec backend env | grep -E "(DB_|POSTGRES_)" | sort
+docker-compose exec -T backend env | grep -E "(DB_|POSTGRES_|DATABASE_URL)" | sort || true
 
 # 6. Testar Django novamente
 echo ""
 echo "🔗 Testando Django com novas variáveis:"
-docker-compose exec backend python -c "
+docker-compose exec -T backend python -c "
 from decouple import config
 print('✅ DB_HOST:', config('DB_HOST', default='NOT_SET'))
 print('✅ DB_USER:', config('DB_USER', default='NOT_SET'))  
 print('✅ DB_PASSWORD:', config('DB_PASSWORD', default='NOT_SET'))
+print('✅ DATABASE_URL:', config('DATABASE_URL', default='NOT_SET'))
 "
 
 # 7. Testar conexão Django
 echo ""
 echo "🔗 Testando conexão Django:"
-docker-compose exec backend python -c "
+docker-compose exec -T backend python -c "
 import os
 import django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'agroalerta.settings')
@@ -68,12 +69,12 @@ except Exception as e:
 # 8. Se funcionou, executar migrações
 echo ""
 echo "🔄 Executando migrações:"
-docker-compose exec backend python manage.py migrate
+docker-compose exec -T backend python manage.py migrate
 
 # 9. Coletar estáticos
 echo ""
 echo "📁 Coletando estáticos:"
-docker-compose exec backend python manage.py collectstatic --noinput
+docker-compose exec -T backend python manage.py collectstatic --noinput
 
 # 10. Testar aplicação final
 echo ""

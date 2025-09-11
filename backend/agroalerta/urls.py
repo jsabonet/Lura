@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.http import JsonResponse
 from django.conf import settings
 from django.conf.urls.static import static
 
@@ -28,6 +29,8 @@ urlpatterns = [
     path('api/mercado/', include('mercado.urls')),
     path('api/notificacoes/', include('notificacoes.urls')),
     path('api/triangulation/', include('triangulacao.urls')),
+    # Healthcheck simples (não depende do DB)
+    path('health/', lambda request: JsonResponse({"status": "ok"})),
 ]
 
 # Servir arquivos de media em desenvolvimento
