@@ -27,8 +27,6 @@ services:
       - "8000:8000"
     environment:
       - DEBUG=False
-      # Prefer explicit DATABASE_URL (resolved from .env, not at compose parse time)
-      - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - ALLOWED_HOSTS=localhost,127.0.0.1,seudominio.com,*.seudominio.com
@@ -109,7 +107,7 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx_production.conf:/etc/nginx/nginx.conf
+  - ./nginx.conf:/etc/nginx/nginx.conf
       - ./ssl:/etc/nginx/ssl
       - static_volume:/var/www/static
       - media_volume:/var/www/media
