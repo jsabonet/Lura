@@ -19,6 +19,6 @@ class AlertSubscriptionSerializer(serializers.ModelSerializer):
             if field not in validated_data:
                 raise serializers.ValidationError({field: 'Este campo é obrigatório.'})
         
-        # Adiciona o usuário do request
+        # Adiciona o utilizador do request
         validated_data['usuario'] = self.context['request'].user
         return super().create(validated_data)

@@ -125,13 +125,13 @@ export function IntegratedLocationWeatherProvider({
   }, []);
 
   /**
-   * Solicita localização do usuário com sistema de retry inteligente
+   * Solicita localização do utilizador com sistema de retry inteligente
    */
   const requestLocation = useCallback(async (retryCount: number = 0): Promise<void> => {
     const maxRetries = 2;
     const retryDelay = [0, 2000, 5000]; // 0s, 2s, 5s
     
-    console.log(`📍 Solicitando localização do usuário... (Tentativa ${retryCount + 1}/${maxRetries + 1})`);
+    console.log(`📍 Solicitando localização do utilizador... (Tentativa ${retryCount + 1}/${maxRetries + 1})`);
     
     setIsLocationLoading(true);
     

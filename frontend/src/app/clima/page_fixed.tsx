@@ -128,7 +128,7 @@ export default function ClimaPage() {
                 </h4>
                 <p className="text-sm text-blue-800 dark:text-blue-400 mt-2">
                   {currentWeather.current.temperature > 30 
-                    ? '🔥 Alta temperatura - considere irrigação adicional e proteção das culturas'
+                    ? '🔥 Alta temperatura - considere rega adicional e protecção das culturas'
                     : currentWeather.current.temperature < 10
                     ? '❄️ Baixa temperatura - proteja culturas sensíveis ao frio'
                     : '✅ Temperatura ideal para crescimento da maioria das culturas'

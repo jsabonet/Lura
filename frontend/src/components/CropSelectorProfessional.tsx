@@ -163,7 +163,7 @@ function CropSelectorProfessional({
             </div>
             <div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                Seleção Inteligente de Culturas
+                Selecção Inteligente de Culturas
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 Recomendações baseadas em análise multidimensional
@@ -391,7 +391,7 @@ function CropSelectorProfessional({
               onClick={() => onCropSelect([])}
               className="text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
             >
-              Limpar seleção
+              Limpar selecção
             </button>
           </div>
         </div>

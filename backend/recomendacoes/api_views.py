@@ -25,7 +25,7 @@ def chatbot_view(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Determinar contexto do usuário
+        # Determinar contexto do utilizador
         if hasattr(request, 'user') and request.user.is_authenticated:
             user = request.user
             localizacao = getattr(user, 'localizacao', 'Moçambique')
@@ -145,7 +145,7 @@ def analisar_intencao(pergunta: str) -> str:
     intencoes = {
         'plantio': ['plantar', 'plantio', 'semear', 'época', 'quando', 'variedade'],
         'pragas': ['praga', 'inseto', 'lagarta', 'fungo', 'doença', 'controle', 'tratamento'],
-        'irrigacao': ['água', 'irrigar', 'irrigação', 'regar', 'quantidade', 'rega'],
+        'irrigacao': ['água', 'regar', 'rega', 'irrigar', 'quantidade', 'irrigação'],
         'fertilizacao': ['adubo', 'fertilizante', 'nutriente', 'npk', 'fertilizar'],
         'mercado': ['preço', 'vender', 'mercado', 'custo', 'lucro', 'rentabilidade'],
         'clima': ['tempo', 'chuva', 'seca', 'temperatura', 'clima', 'estação']
@@ -217,7 +217,7 @@ def gerar_resposta_plantio(cultura: str, localizacao: str) -> dict:
 • Use variedades adaptadas ao clima local
 • Prepare o terreno antes das chuvas começarem
 
-💡 **Próximos passos:** Quer saber sobre irrigação, pragas ou fertilização para {cultura}?"""
+💡 **Próximos passos:** Quer saber sobre rega, pragas ou fertilização para {cultura}?"""
 
     return {
         'resposta': resposta,
@@ -268,7 +268,7 @@ def gerar_resposta_pragas(cultura: str, localizacao: str) -> dict:
 
     return {
         'resposta': resposta,
-        'fonte': 'Sistema de Manejo Integrado de Pragas',
+        'fonte': 'Sistema de Maneio Integrado de Pragas',
         'confidence': 0.88,
         'relacionadas': [
             'Detectar pragas por foto',
@@ -278,7 +278,7 @@ def gerar_resposta_pragas(cultura: str, localizacao: str) -> dict:
     }
 
 def gerar_resposta_irrigacao(cultura: str, localizacao: str) -> dict:
-    """Gerar resposta sobre irrigação"""
+    """Gerar resposta sobre rega"""
     necessidades = {
         'milho': '500-800mm por ciclo',
         'feijao': '300-500mm por ciclo',
@@ -288,7 +288,7 @@ def gerar_resposta_irrigacao(cultura: str, localizacao: str) -> dict:
     
     necessidade = necessidades.get(cultura, '500-700mm por ciclo')
     
-    resposta = f"""💧 **Irrigação de {cultura.title()} em {localizacao}:**
+    resposta = f"""💧 **Rega de {cultura.title()} em {localizacao}:**
 
 **Necessidade hídrica:** {necessidade}
 **Frequência:** A cada 2-3 dias (época seca)
@@ -307,15 +307,15 @@ def gerar_resposta_irrigacao(cultura: str, localizacao: str) -> dict:
 
 **💡 Dicas para economizar água:**
 • Use cobertura morta (palha, folhas)
-• Faça irrigação localizada
+• Faça rega localizada
 • Aproveite água da chuva
 • Irrigue no início da manhã
 
-**Para {localizacao}:** Considere as chuvas sazonais no planejamento da irrigação."""
+**Para {localizacao}:** Considere as chuvas sazonais no planeamento da rega."""
 
     return {
         'resposta': resposta,
-        'fonte': 'Manual de Irrigação Eficiente',
+        'fonte': 'Manual de Rega Eficiente',
         'confidence': 0.82,
         'relacionadas': [
             'Sistemas de irrigação caseiros',

@@ -41,6 +41,7 @@ export default function CropSelector({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [showAllMode, setShowAllMode] = useState<boolean>(false);
+  const [showClearAllModal, setShowClearAllModal] = useState(false);
   
   // Número inicial de culturas a mostrar por categoria (modo inteligente)
   const INITIAL_CROPS_PER_CATEGORY = 3;
@@ -82,6 +83,23 @@ export default function CropSelector({
       newExpanded.add(category);
     }
     setExpandedCategories(newExpanded);
+  };
+
+  const handleClearAllCrops = () => {
+    if (selectedCrops.length > 3) {
+      setShowClearAllModal(true);
+    } else {
+      onCropSelect([]);
+    }
+  };
+
+  const confirmClearAll = () => {
+    onCropSelect([]);
+    setShowClearAllModal(false);
+  };
+
+  const cancelClearAll = () => {
+    setShowClearAllModal(false);
   };
 
   const getCropsToShow = (crops: CropData[], category: string) => {
@@ -141,7 +159,7 @@ export default function CropSelector({
                 <span className="text-xl sm:text-2xl">🌱</span>
               </div>
               <h3 className="text-lg sm:text-xl font-bold text-white">
-                Seleção de Culturas
+                Selecção de Culturas
               </h3>
             </div>
             <p className="text-green-100 text-xs sm:text-sm leading-relaxed">
@@ -174,7 +192,7 @@ export default function CropSelector({
                   <span className="hidden sm:inline">
                     {selectedCrops.length === 0 
                       ? 'Clique para escolher suas culturas' 
-                      : 'Clique para editar seleção'
+                      : 'Clique para editar selecção'
                     }
                   </span>
                   <span className="sm:hidden">
@@ -196,11 +214,26 @@ export default function CropSelector({
           {/* Selected Crops Preview - Mobile Optimized */}
           {selectedCrops.length > 0 && (
             <div className="mt-3 sm:mt-4 p-3 sm:p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg sm:rounded-xl border border-green-200 dark:border-green-800">
-              <div className="flex items-center gap-2 mb-2 sm:mb-3">
-                <span className="text-green-600 dark:text-green-400 text-sm sm:text-base">🌾</span>
-                <span className="text-xs sm:text-sm font-semibold text-green-800 dark:text-green-300">
-                  Culturas Selecionadas
-                </span>
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-green-600 dark:text-green-400 text-sm sm:text-base">🌾</span>
+                  <span className="text-xs sm:text-sm font-semibold text-green-800 dark:text-green-300">
+                    Culturas Seleccionadas ({selectedCrops.length})
+                  </span>
+                </div>
+                {selectedCrops.length > 1 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClearAllCrops();
+                    }}
+                    className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 dark:hover:text-red-300 rounded-md transition-all duration-200 flex items-center gap-1"
+                    title="Remover todas as culturas"
+                  >
+                    <span>🗑️</span>
+                    <span className="hidden sm:inline">Limpar Todas</span>
+                  </button>
+                )}
               </div>
               <div className="flex flex-wrap gap-1 sm:gap-2">
                 {selectedCrops.map(cropId => {
@@ -210,9 +243,9 @@ export default function CropSelector({
                   const compatibility = getRegionCompatibility(crop);
                   
                   return (
-                    <span 
+                    <div 
                       key={cropId}
-                      className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium shadow-sm border transition-all hover:scale-105 ${
+                      className={`inline-flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium shadow-sm border transition-all group ${
                         compatibility === 'ideal' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-300 dark:border-green-700' :
                         compatibility === 'compatible' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300 border-yellow-300 dark:border-yellow-700' :
                         compatibility === 'incompatible' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 border-red-300 dark:border-red-700' :
@@ -220,10 +253,21 @@ export default function CropSelector({
                       }`}
                     >
                       <span className="text-sm sm:text-lg">{crop.icon}</span>
-                      <span className="truncate max-w-24 sm:max-w-none">{crop.name}</span>
+                      <span className="truncate max-w-16 sm:max-w-none">{crop.name}</span>
                       {compatibility === 'ideal' && <span className="text-green-600 hidden sm:inline">✨</span>}
                       {compatibility === 'incompatible' && <span className="text-red-600 hidden sm:inline">⚠️</span>}
-                    </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const newSelection = selectedCrops.filter(id => id !== cropId);
+                          onCropSelect(newSelection);
+                        }}
+                        className="ml-1 w-4 h-4 rounded-full bg-red-200 hover:bg-red-300 dark:bg-red-800/50 dark:hover:bg-red-700/50 flex items-center justify-center opacity-60 hover:opacity-100 transition-all group-hover:opacity-100"
+                        title={`Remover ${crop.name}`}
+                      >
+                        <span className="text-red-600 dark:text-red-400 text-xs">×</span>
+                      </button>
+                    </div>
                   );
                 })}
               </div>
@@ -500,6 +544,41 @@ export default function CropSelector({
           </div>
         )}
       </div>
+
+      {/* Modal de confirmação para limpar todas */}
+      {showClearAllModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-8 h-8 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <span className="text-red-600 dark:text-red-400">⚠️</span>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Confirmar Acção
+              </h3>
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              Tem a certeza de que deseja remover todas as {selectedCrops.length} culturas seleccionadas? Esta acção não pode ser desfeita.
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelClearAll}
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmClearAll}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
+              >
+                Sim, Remover Todas
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

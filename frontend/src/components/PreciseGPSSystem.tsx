@@ -280,7 +280,7 @@ export default function PreciseGPSSystem({ onLocationUpdate, onError }: PreciseG
         }
       },
       (error) => {
-        console.error('Erro no monitoramento de localização:', error);
+        console.error('Erro na monitorização de localização:', error);
       },
       options
     );

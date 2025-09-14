@@ -40,7 +40,7 @@ export default function AlertActivationModal({ isOpen, onClose, cultura, regiao,
       setError(null);
       setSuccess(null);
 
-      // Atualizar telefone do usuário se mudou
+      // Actualizar telefone do utilizador se mudou
       if (user && phone && phone !== user.telefone) {
         await updateUser({ telefone: phone, receber_sms: true });
       }

@@ -41,7 +41,7 @@ class MetodoControle(models.Model):
             ('quimico', 'Controle Químico'),
             ('cultural', 'Controle Cultural'),
             ('mecanico', 'Controle Mecânico'),
-            ('integrado', 'Manejo Integrado'),
+            ('integrado', 'Maneio Integrado'),
         ]
     )
     descricao = models.TextField()

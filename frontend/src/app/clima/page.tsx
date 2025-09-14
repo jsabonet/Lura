@@ -185,65 +185,6 @@ function ClimaPageContent() {
         {/* Weather Dashboard Original */}
         <WeatherDashboard className="mb-8" />
 
-        {/* Botões para Sistemas Alternativos - Removido daqui */}
-
-        {/* Agricultural Insights - Mobile Optimized */}
-        {currentWeather && (
-          <div className="mt-6 sm:mt-8 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-gray-200 dark:border-gray-700">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white mb-4 sm:mb-6">
-              🌾 Insights Agrícolas Personalizados
-            </h3>
-            
-            <div className="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-3 sm:gap-4">
-              {/* Temperature Analysis */}
-              <div className="p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                <h4 className="font-medium text-blue-900 dark:text-blue-300 flex items-center space-x-2 text-sm sm:text-base">
-                  <span>🌡️</span>
-                  <span>Temperatura: {Math.round(currentWeather.current.temperature)}°C</span>
-                </h4>
-                <p className="text-xs sm:text-sm text-blue-800 dark:text-blue-400 mt-2">
-                  {currentWeather.current.temperature > 30 
-                    ? '🔥 Alta temperatura - considere irrigação adicional e proteção das culturas'
-                    : currentWeather.current.temperature < 10
-                    ? '❄️ Baixa temperatura - proteja culturas sensíveis ao frio'
-                    : '✅ Temperatura ideal para crescimento da maioria das culturas'
-                  }
-                </p>
-              </div>
-
-              {/* Humidity Analysis */}
-              <div className="p-3 sm:p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                <h4 className="font-medium text-green-900 dark:text-green-300 flex items-center space-x-2 text-sm sm:text-base">
-                  <span>💧</span>
-                  <span>Umidade: {currentWeather.current.humidity}%</span>
-                </h4>
-                <p className="text-xs sm:text-sm text-green-800 dark:text-green-400 mt-2">
-                  {currentWeather.current.humidity > 80 
-                    ? '🍄 Alta umidade - monitore fungos e doenças foliares'
-                    : currentWeather.current.humidity < 40
-                    ? '🏜️ Baixa umidade - aumente frequência de irrigação'
-                    : '✅ Umidade adequada para desenvolvimento saudável'
-                  }
-                </p>
-              </div>
-
-              {/* Wind Analysis */}
-              <div className="p-3 sm:p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
-                <h4 className="font-medium text-purple-900 dark:text-purple-300 flex items-center space-x-2 text-sm sm:text-base">
-                  <span>💨</span>
-                  <span>Vento: {Math.round(currentWeather.current.wind.speed * 3.6)} km/h</span>
-                </h4>
-                <p className="text-xs sm:text-sm text-purple-800 dark:text-purple-400 mt-2">
-                  {currentWeather.current.wind.speed > 10 
-                    ? '⚠️ Vento forte - evite aplicação de defensivos e fertilizantes foliares'
-                    : '✅ Condições ideais para aplicações e pulverizações'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Quick Actions - Mobile Optimized */}
         <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <Link

@@ -77,7 +77,7 @@ function CropSelectorClean({
       {/* Header */}
       <div className="p-6 border-b border-gray-200 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          Seleção de Culturas
+          Selecção de Culturas
         </h3>
         
         {/* Search Bar */}

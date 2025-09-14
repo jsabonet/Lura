@@ -66,7 +66,7 @@ export default function WeatherWidget({ compact = true, showForecast = false }: 
               
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-green-700 dark:text-green-200">
-                  <span>💧 Umidade:</span>
+                  <span>💧 Humidade:</span>
                   <span>{currentWeather.current.humidity}%</span>
                 </div>
                 <div className="flex justify-between text-green-700 dark:text-green-200">
@@ -87,7 +87,7 @@ export default function WeatherWidget({ compact = true, showForecast = false }: 
               </h4>
               <div className="text-xs text-green-700 dark:text-green-300">
                 {currentWeather.current.temperature > 30 
-                  ? '🔥 Temperatura alta - aumente irrigação'
+                  ? '🔥 Temperatura alta - aumente rega'
                   : currentWeather.current.temperature < 10
                   ? '❄️ Temperatura baixa - proteja culturas'
                   : '✅ Condições ideais para crescimento'

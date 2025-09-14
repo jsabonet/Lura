@@ -95,7 +95,7 @@ class PerguntaChatbot(models.Model):
             ('cultivo', 'Cultivo'),
             ('pragas', 'Pragas e Doenças'),
             ('clima', 'Clima'),
-            ('irrigacao', 'Irrigação'),
+            ('irrigacao', 'Rega'),
             ('adubacao', 'Adubação'),
             ('colheita', 'Colheita'),
             ('mercado', 'Mercado'),

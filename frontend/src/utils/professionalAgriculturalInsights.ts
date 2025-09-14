@@ -505,7 +505,7 @@ function generateRequirements(crop: CropData, soil: SoilAnalysis, water: WaterAv
   }
   
   if (crop.sustainability.pesticidesUse === 'intensivo') {
-    requirements.push(`Programa de manejo integrado de pragas`);
+    requirements.push(`Programa de maneio integrado de pragas`);
   }
   
   return requirements;
@@ -517,7 +517,7 @@ function generateRecommendations(crop: CropData, score: number, context: any): s
   if (score >= 80) {
     recommendations.push(`Cultura altamente recomendada para a região`);
   } else if (score >= 60) {
-    recommendations.push(`Cultura viável com manejo adequado`);
+    recommendations.push(`Cultura viável com maneio adequado`);
   } else {
     recommendations.push(`Requer cuidados especiais e monitoramento constante`);
   }

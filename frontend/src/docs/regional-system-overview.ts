@@ -1,7 +1,7 @@
 /**
- * 🎯 SISTEMA HIERÁRQUICO DE SELEÇÃO PROVÍNCIA-DISTRITO
+ * 🎯 SISTEMA HIERÁRQUICO DE SELECÇÃO PROVÍNCIA-DISTRITO
  * 
- * Implementação completa de um sistema avançado para seleção regional
+ * Implementação completa de um sistema avançado para selecção regional
  * com dados agro-climáticos específicos por distrito em Moçambique.
  * 
  * 📂 ESTRUTURA DE ARQUIVOS CRIADOS/MODIFICADOS:
@@ -30,7 +30,7 @@
  * 
  * 🚀 FUNCIONALIDADES IMPLEMENTADAS:
  * 
- * ✅ Seleção hierárquica (Província → Distrito)
+ * ✅ Selecção hierárquica (Província → Distrito)
  * ✅ Pesquisa inteligente de distritos
  * ✅ Dados climáticos específicos por localização
  * ✅ Interface responsiva e intuitiva
@@ -45,7 +45,7 @@
  * - Design profissional sem alterar o layout geral
  * - Dropdowns responsivos com pesquisa
  * - Cards informativos com atividades econômicas
- * - Indicadores visuais de seleção
+ * - Indicadores visuais de selecção
  * - Estados de carregamento elegantes
  * - Tratamento de erros user-friendly
  * - Informações contextuais relevantes

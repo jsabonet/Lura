@@ -32,7 +32,7 @@ def enviar_notificacao_view(request):
         
         resultados = []
         
-        # Se destinatários não especificados, enviar para o usuário atual
+        # Se destinatários não especificados, enviar para o utilizador actual
         if not destinatarios:
             destinatarios = [request.user.id]
         
@@ -73,10 +73,10 @@ def enviar_notificacao_view(request):
                 notificacao.save()
                 
             except User.DoesNotExist:
-                logger.error(f"Usuário {user_id} não encontrado")
+                logger.error(f"Utilizador {user_id} não encontrado")
                 continue
             except Exception as e:
-                logger.error(f"Erro ao enviar para usuário {user_id}: {e}")
+                logger.error(f"Erro ao enviar para utilizador {user_id}: {e}")
                 continue
         
         return Response({
@@ -97,7 +97,7 @@ def enviar_notificacao_view(request):
 @permission_classes([IsAuthenticated])
 def listar_notificacoes_view(request):
     """
-    View para listar notificações do usuário
+    View para listar notificações do utilizador
     """
     try:
         notificacoes = Notificacao.objects.filter(
@@ -229,7 +229,7 @@ def alertas_inteligentes_view(request):
             if 'mercado' in tipos_alertas:
                 alertas.extend(gerar_alertas_mercado(cultura, localizacao))
         
-        # 4. Alertas Personalizados por Usuário
+        # 4. Alertas Personalizados por Utilizador
         if user_id:
             try:
                 user = User.objects.get(id=user_id)
@@ -395,7 +395,7 @@ def gerar_alertas_mercado(cultura, localizacao):
     return alertas
 
 def gerar_alertas_personalizados(user):
-    """Gerar alertas personalizados baseados no perfil do usuário"""
+    """Gerar alertas personalizados baseados no perfil do utilizador"""
     alertas = []
     
     if hasattr(user, 'culturas_interesse') and user.culturas_interesse:

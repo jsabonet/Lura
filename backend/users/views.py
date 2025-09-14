@@ -24,7 +24,7 @@ class UserRegistrationView(generics.CreateAPIView):
             'user': UserSerializer(user).data,
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-            'message': 'Usuário criado com sucesso'
+            'message': 'Utilizador criado com sucesso'
         }, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])

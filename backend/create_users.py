@@ -14,11 +14,11 @@ django.setup()
 from users.models import User, PerfilAgricultor
 
 def create_test_users():
-    print("🌱 Criando usuários de teste para AgroAlerta...")
+    print("🌱 Criando utilizadores de teste para AgroAlerta...")
     
-    # Verificar se já existem usuários
+    # Verificar se já existem utilizadores
     if User.objects.filter(username='jose_farmer').exists():
-        print("❌ Usuários já existem. Pulando criação...")
+        print("❌ Utilizadores já existem. Pulando criação...")
         return
     
     # Farmer 1
@@ -85,11 +85,11 @@ def create_test_users():
         distrito='Nampula'
     )
     
-    print("✅ Usuários de teste criados com sucesso!")
-    print(f"👥 {User.objects.count()} usuários no total")
+    print("✅ Utilizadores de teste criados com sucesso!")
+    print(f"👥 {User.objects.count()} utilizadores no total")
     print(f"🚜 {PerfilAgricultor.objects.count()} perfis de agricultor")
     
-    print("\\n📋 Usuários criados:")
+    print("\\n📋 Utilizadores criados:")
     for user in User.objects.all():
         print(f"  - {user.username} ({user.first_name} {user.last_name}) - {user.get_tipo_usuario_display()}")
 

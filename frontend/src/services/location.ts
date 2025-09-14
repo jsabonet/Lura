@@ -439,7 +439,7 @@ class LocationService {
           switch (error.code) {
             case error.PERMISSION_DENIED:
               errorCode = 'PERMISSION_DENIED';
-              errorMessage = 'Permissão de localização negada pelo usuário';
+              errorMessage = 'Permissão de localização negada pelo utilizador';
               break;
             case error.POSITION_UNAVAILABLE:
               errorCode = 'POSITION_UNAVAILABLE';
@@ -533,7 +533,7 @@ class LocationService {
   }
 
   /**
-   * Obtém localização completa do usuário usando métodos avançados do Google Maps
+   * Obtém localização completa do utilizador usando métodos avançados do Google Maps
    */
   public async getCurrentLocation(): Promise<LocationDetails> {
     try {
@@ -623,7 +623,7 @@ class LocationService {
   }
 
   /**
-   * Solicita permissão de localização ao usuário
+   * Solicita permissão de localização ao utilizador
    */
   public async requestLocationPermission(): Promise<boolean> {
     try {

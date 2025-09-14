@@ -218,7 +218,7 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                 </h4>
                 <p className="text-sm text-orange-700 dark:text-orange-400 mb-3">
                   Estamos usando sua localização IP ({(location as any)?.source === 'ip' ? '🌐 IP Location' : 'aproximada'}). 
-                  Para dados climáticos mais precisos para sua região, use o GPS do seu dispositivo.
+                  Para dados climáticos mais precisos para sua região, use o GPS do seu dispositivo móvel.
                 </p>
                 <button
                   onClick={() => forceNativeGPS()}
@@ -455,7 +455,7 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                         {Math.round(displayWeather.current.temperature)}°C
                       </div>
                       <div className="text-gray-500 dark:text-gray-400">
-                        <div className="text-sm font-medium">Umidade</div>
+                        <div className="text-sm font-medium">Humidade</div>
                         <div className="text-lg lg:text-xl font-semibold">
                           {displayWeather.current.humidity}%
                         </div>
@@ -484,7 +484,7 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-6 sm:mt-8">
                   <div className="weather-card bg-white/70 dark:bg-gray-600/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-3 sm:p-4 text-center">
                     <div className="text-2xl sm:text-3xl lg:text-4xl mb-1 sm:mb-2">💧</div>
-                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium">Umidade</div>
+                    <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 font-medium">Humidade</div>
                     <div className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 dark:text-blue-400">
                       {displayWeather.current.humidity}%
                     </div>
@@ -669,11 +669,26 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                 <span className="flex items-center gap-2">
                   🌾 Insights Agrícolas Personalizados
                 </span>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {selectedCrops.length > 0 && (
-                    <span className="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full">
-                      🎯 {selectedCrops.length} cultura{selectedCrops.length > 1 ? 's' : ''} selecionada{selectedCrops.length > 1 ? 's' : ''}
-                    </span>
+                    <>
+                      <span className="px-2 py-1 text-xs bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 rounded-full">
+                        🎯 {selectedCrops.length} cultura{selectedCrops.length > 1 ? 's' : ''} seleccionada{selectedCrops.length > 1 ? 's' : ''}
+                      </span>
+                      {selectedCrops.length > 1 && (
+                        <button
+                          onClick={() => {
+                            setSelectedCrops([]);
+                          }}
+                          className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 hover:text-red-800 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 dark:hover:text-red-300 rounded-full transition-all duration-200 flex items-center gap-1 group"
+                          title="Remover todas as culturas seleccionadas"
+                        >
+                          <span>🗑️</span>
+                          <span className="hidden sm:inline">Limpar Todas</span>
+                          <span className="sm:hidden">Limpar</span>
+                        </button>
+                      )}
+                    </>
                   )}
                   {dataSource === 'regional' && (
                     <span className="px-2 py-1 text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-300 rounded-full">
@@ -690,7 +705,7 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                 </div>
               </h3>
               {(() => {
-                // Usar o sistema profissional de análise se há culturas selecionadas
+                // Usar o sistema profissional de análise se há culturas seleccionadas
                 if (selectedCrops.length > 0) {
                   const professionalInsights = generateProfessionalInsights(
                     {
@@ -698,7 +713,10 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                       humidity: displayWeather.current.humidity,
                       precipitation: 0, // Será expandido com dados reais de precipitação
                       windSpeed: displayWeather.current.wind.speed,
-                      region: (displayLocation as any)?.name
+                      region: (displayLocation as any)?.name,
+                      latitude: (displayLocation as any)?.coordinates?.latitude || (displayLocation as any)?.lat,
+                      longitude: (displayLocation as any)?.coordinates?.longitude || (displayLocation as any)?.lng,
+                      locationSource: dataSource as 'gps' | 'regional' | 'manual'
                     },
                     selectedCrops
                   );
@@ -713,7 +731,7 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                           Condições Ideais Detectadas
                         </h4>
                         <p className="text-sm text-green-700 dark:text-green-400">
-                          As condições climáticas atuais estão excelentes para suas culturas selecionadas. Continue com o manejo planejado!
+                          As condições climáticas atuais estão excelentes para suas culturas selecionadas. Continue com o maneio planejado!
                         </p>
                       </div>
                     );
@@ -772,7 +790,10 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                             humidity: displayWeather.current.humidity,
                             precipitation: 0, // Será expandido com dados reais de precipitação
                             windSpeed: displayWeather.current.wind.speed,
-                            region: (displayLocation as any)?.name
+                            region: (displayLocation as any)?.name,
+                            latitude: (displayLocation as any)?.coordinates?.latitude || (displayLocation as any)?.lat,
+                            longitude: (displayLocation as any)?.coordinates?.longitude || (displayLocation as any)?.lng,
+                            locationSource: dataSource as 'gps' | 'regional' | 'manual'
                           }
                         );
 
@@ -995,7 +1016,7 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                   );
                 }
 
-                // Fallback para o sistema original se não há culturas selecionadas
+                // Fallback para o sistema original se não há culturas seleccionadas
                 const insights = generateWeatherInsights(
                   {
                     temperature: displayWeather.current.temperature,
@@ -1105,8 +1126,8 @@ export function WeatherDashboard({ className = '' }: WeatherDashboardProps) {
                                 <div className="flex items-center gap-2">
                                   <span className={`text-xs uppercase font-bold tracking-wide ${theme.subtext} px-2 py-1 bg-white/50 dark:bg-gray-800/50 rounded-md border border-white/30 dark:border-gray-700/50`}>
                                     {insight.category === 'planting' && '🌱 Plantio'}
-                                    {insight.category === 'irrigation' && '💧 Irrigação'}
-                                    {insight.category === 'protection' && '🛡️ Proteção'}
+                                    {insight.category === 'irrigation' && '💧 Rega'}
+                                    {insight.category === 'protection' && '🛡️ Protecção'}
                                     {insight.category === 'harvest' && '🌾 Colheita'}
                                     {insight.category === 'pest' && '🐛 Pragas'}
                                     {insight.category === 'general' && '📋 Geral'}

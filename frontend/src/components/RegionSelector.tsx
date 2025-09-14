@@ -190,10 +190,10 @@ const RegionSelector: React.FC<RegionSelectorProps> = ({
         </div>
       )}
 
-      {/* Informações da seleção atual */}
+      {/* Informações da selecção actual */}
       {currentProvince && (
         <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="font-medium text-gray-900 mb-2">Seleção Atual:</h4>
+          <h4 className="font-medium text-gray-900 mb-2">Selecção Actual:</h4>
           <div className="space-y-1 text-sm text-gray-600">
             <div>📍 <strong>Província:</strong> {currentProvince.name}</div>
             {selectedDistrict && (

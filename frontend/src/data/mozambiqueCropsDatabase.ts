@@ -857,8 +857,8 @@ export const MOZAMBIQUE_CROPS: MozambiqueCropData[] = [
 
   // CEREAIS ADICIONAIS
   {
-    id: 'milheto',
-    name: 'Milheto',
+    id: 'mexoeira',
+    name: 'Mexoeira',
     localName: 'Mexoeira',
     category: 'cereais',
     icon: '🌾',
@@ -991,7 +991,7 @@ export const MOZAMBIQUE_CROPS: MozambiqueCropData[] = [
       soilConservation: 'moderada',
       carbonSequestration: 'média',
       biodiversityImpact: 'neutro',
-      rotationCompatibility: ['Leguminosas', 'Girassol', 'Canola']
+      rotationCompatibility: ['Leguminosas', 'Girassol']
     },
     agronomy: {
       plantingDensity: '4.000.000-5.000.000 plantas/ha',
@@ -2477,78 +2477,78 @@ export const MOZAMBIQUE_CROPS: MozambiqueCropData[] = [
   },
 
   // OLEAGINOSAS ADICIONAIS
-  {
-    id: 'canola',
-    name: 'Canola',
-    localName: 'Colza',
-    category: 'oleaginosas',
-    icon: '🌻',
-    season: 'seca',
-    growthPeriod: 110,
-    waterRequirement: 'médio',
-    temperatureRange: { min: 12, max: 25 },
-    idealRegions: ['Manica', 'Tete (zonas altas)', 'Niassa (planaltos)'],
-    compatibleRegions: ['Zambézia (zonas altas)'],
-    incompatibleRegions: ['Gaza', 'Inhambane', 'Sofala (baixadas)'],
-    climate: {
-      temperatureOptimal: 18,
-      rainfallRequirement: '500-800mm',
-      altitudeRange: { min: 800, max: 2000 },
-      photoperiodSensitive: true
-    },
-    soil: {
-      phOptimal: { min: 6.0, max: 7.5 },
-      drainageRequirement: 'boa',
-      soilTypes: ['Franco', 'Franco-argiloso', 'Bem estruturado'],
-      fertilityRequirement: 'alta'
-    },
-    water: {
-      irrigationDependency: 'moderada',
-      waterEfficiency: 'alta',
-      droughtTolerance: 'média'
-    },
-    economic: {
-      marketDemand: 'baixa',
-      priceStability: 'moderada',
-      laborRequirement: 'baixo',
-      infrastructureNeed: 'moderada',
-      investmentLevel: 'médio',
-      profitabilityPotential: 'média',
-      exportPotential: 'médio',
-      processingNeed: 'avançado',
-      seedCostPerHa: 20000,
-      fertiliserCostPerHa: 30000,
-      pesticideCostPerHa: 25000,
-      laborCostPerHa: 15000,
-      machineryDepreciationPerHa: 18000,
-      otherCostsPerHa: 8000,
-      averageYieldPerHa: 1500,
-      pricePerKg: 95,
-      priceVariability: 0.40
-    },
-    risks: {
-      mainPests: ['Pulgão', 'Altíca', 'Lagarta'],
-      mainDiseases: ['Esclerotínia', 'Blackleg', 'Alternária'],
-      climateVulnerability: 'alta',
-      marketRisk: 'alto',
-      cycloneVulnerability: 'baixa',
-      droughtRisk: 'médio'
-    },
-    sustainability: {
-      environmentalImpact: 'baixo',
-      soilConservation: 'boa',
-      carbonSequestration: 'média',
-      biodiversityImpact: 'positivo',
-      rotationCompatibility: ['Cereais', 'Leguminosas', 'Cevada']
-    },
-    agronomy: {
-      plantingDensity: '80-120 plantas/m²',
-      spacingRecommendation: '15cm entre fileiras, sementes espaçadas',
-      fertiliserProgram: ['NPK base alto', 'Boro', 'Enxofre'],
-      harvestMethod: 'mecanizada',
-      postHarvestHandling: ['Secagem', 'Limpeza', 'Extração de óleo']
-    }
-  },
+  // {
+  //   id: 'canola',
+  //   name: 'Canola',
+  //   localName: 'Colza',
+  //   category: 'oleaginosas',
+  //   icon: '🌻',
+  //   season: 'seca',
+  //   growthPeriod: 110,
+  //   waterRequirement: 'médio',
+  //   temperatureRange: { min: 12, max: 25 },
+  //   idealRegions: ['Manica', 'Tete (zonas altas)', 'Niassa (planaltos)'],
+  //   compatibleRegions: ['Zambézia (zonas altas)'],
+  //   incompatibleRegions: ['Gaza', 'Inhambane', 'Sofala (baixadas)'],
+  //   climate: {
+  //     temperatureOptimal: 18,
+  //     rainfallRequirement: '500-800mm',
+  //     altitudeRange: { min: 800, max: 2000 },
+  //     photoperiodSensitive: true
+  //   },
+  //   soil: {
+  //     phOptimal: { min: 6.0, max: 7.5 },
+  //     drainageRequirement: 'boa',
+  //     soilTypes: ['Franco', 'Franco-argiloso', 'Bem estruturado'],
+  //     fertilityRequirement: 'alta'
+  //   },
+  //   water: {
+  //     irrigationDependency: 'moderada',
+  //     waterEfficiency: 'alta',
+  //     droughtTolerance: 'média'
+  //   },
+  //   economic: {
+  //     marketDemand: 'baixa',
+  //     priceStability: 'moderada',
+  //     laborRequirement: 'baixo',
+  //     infrastructureNeed: 'moderada',
+  //     investmentLevel: 'médio',
+  //     profitabilityPotential: 'média',
+  //     exportPotential: 'médio',
+  //     processingNeed: 'avançado',
+  //     seedCostPerHa: 20000,
+  //     fertiliserCostPerHa: 30000,
+  //     pesticideCostPerHa: 25000,
+  //     laborCostPerHa: 15000,
+  //     machineryDepreciationPerHa: 18000,
+  //     otherCostsPerHa: 8000,
+  //     averageYieldPerHa: 1500,
+  //     pricePerKg: 95,
+  //     priceVariability: 0.40
+  //   },
+  //   risks: {
+  //     mainPests: ['Pulgão', 'Altíca', 'Lagarta'],
+  //     mainDiseases: ['Esclerotínia', 'Blackleg', 'Alternária'],
+  //     climateVulnerability: 'alta',
+  //     marketRisk: 'alto',
+  //     cycloneVulnerability: 'baixa',
+  //     droughtRisk: 'médio'
+  //   },
+  //   sustainability: {
+  //     environmentalImpact: 'baixo',
+  //     soilConservation: 'boa',
+  //     carbonSequestration: 'média',
+  //     biodiversityImpact: 'positivo',
+  //     rotationCompatibility: ['Cereais', 'Leguminosas', 'Cevada']
+  //   },
+  //   agronomy: {
+  //     plantingDensity: '80-120 plantas/m²',
+  //     spacingRecommendation: '15cm entre fileiras, sementes espaçadas',
+  //     fertiliserProgram: ['NPK base alto', 'Boro', 'Enxofre'],
+  //     harvestMethod: 'mecanizada',
+  //     postHarvestHandling: ['Secagem', 'Limpeza', 'Extração de óleo']
+  //   }
+  // },
 
   // ESPECIARIAS ADICIONAIS
   {

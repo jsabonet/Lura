@@ -127,7 +127,7 @@ export function TriangulationProvider({ children }: TriangulationProviderProps) 
       }
 
     } catch (err: unknown) {
-      let errorMessage = 'Erro na triangulação por torres celulares';
+      let errorMessage = 'Erro na triangulação por torres de telemóveis';
       
       if (err instanceof Error) {
         errorMessage = err.message;
@@ -184,16 +184,16 @@ export function TriangulationProvider({ children }: TriangulationProviderProps) 
           return;
 
         } catch (gpsErr) {
-          console.log('GPS falhou, tentando triangulação celular...', gpsErr);
+          console.log('GPS falhou, tentando triangulação de telemóveis...', gpsErr);
         }
       }
 
-      // Segunda tentativa: Triangulação celular
+      // Segunda tentativa: Triangulação de telemóveis
       try {
         await requestTriangulation();
         return;
       } catch (triangulationErr) {
-        console.log('Triangulação celular falhou, usando IP fallback...', triangulationErr);
+        console.log('Triangulação de telemóveis falhou, usando IP fallback...', triangulationErr);
       }
 
       // Terceira tentativa: IP Geolocation (fallback)

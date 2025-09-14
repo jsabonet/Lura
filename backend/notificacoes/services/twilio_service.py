@@ -98,7 +98,7 @@ class TwilioService:
     
     def send_weather_alert(self, user_data: Dict, alert_data: Dict) -> List[Dict]:
         """
-        Enviar alerta climático para o usuário
+        Enviar alerta climático para o utilizador
         """
         results = []
         

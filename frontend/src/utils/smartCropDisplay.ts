@@ -21,7 +21,7 @@ export const CROP_PRIORITIES: Record<string, CropPriority> = {
   'milho': { national: 5, beginner: 4, commercial: 5, subsistence: 5, climate: 3 },
   'arroz': { national: 5, beginner: 3, commercial: 4, subsistence: 4, climate: 2 },
   'sorgo': { national: 4, beginner: 5, commercial: 3, subsistence: 5, climate: 5 },
-  'milheto': { national: 3, beginner: 5, commercial: 2, subsistence: 4, climate: 5 },
+  'mexoeira': { national: 3, beginner: 5, commercial: 2, subsistence: 4, climate: 5 },
   'trigo': { national: 2, beginner: 2, commercial: 3, subsistence: 2, climate: 2 },
   'aveia': { national: 1, beginner: 3, commercial: 2, subsistence: 2, climate: 3 },
   'cevada': { national: 1, beginner: 3, commercial: 2, subsistence: 2, climate: 3 },

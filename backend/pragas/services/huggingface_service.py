@@ -349,7 +349,7 @@ class HuggingFaceService:
         }
         
         return recommendations.get(crop_type.lower(), [
-            "🌾 Mantenha boas práticas de manejo integrado de pragas.",
+            "🌾 Mantenha boas práticas de Maneio integrado de pragas.",
             "💧 Monitore umidade do solo regularmente."
         ])
     

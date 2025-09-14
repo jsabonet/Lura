@@ -13,6 +13,9 @@ interface WeatherData {
   windSpeed?: number;
   conditions?: string;
   region?: string;
+  latitude?: number;
+  longitude?: number;
+  locationSource?: 'gps' | 'regional' | 'manual';
 }
 
 interface CurrentSeason {
@@ -254,7 +257,7 @@ export function analyzeStressFactors(crop: CropData, weather: WeatherData): {
   if (temperature > crop.temperatureRange.max + 5) {
     thermalRisk = 'alto';
     thermalCritical.push('Temperatura excessiva durante floração');
-    thermalMitigation.push('Implementar sombreamento', 'Irrigação por aspersão para resfriamento');
+    thermalMitigation.push('Implementar sombreamento', 'Rega por aspersão para arrefecimento');
   } else if (temperature > crop.temperatureRange.max) {
     thermalRisk = 'médio';
     thermalMitigation.push('Monitorar temperatura do solo', 'Cobertura morta');
@@ -268,10 +271,10 @@ export function analyzeStressFactors(crop: CropData, weather: WeatherData): {
   if (crop.waterRequirement === 'alto' && precipitation < 20) {
     waterRisk = 'alto';
     waterCritical.push('Deficit hídrico severo');
-    irrigationNeeds.push('Irrigação diária necessária', 'Sistema de gotejamento recomendado');
+    irrigationNeeds.push('Rega diária necessária', 'Sistema de gotejamento recomendado');
   } else if (precipitation < 50) {
     waterRisk = 'médio';
-    irrigationNeeds.push('Irrigação suplementar recomendada');
+    irrigationNeeds.push('Rega suplementar recomendada');
   }
   
   return {
@@ -310,14 +313,14 @@ export function generateTimingAnalysis(crop: CropData, currentSeason: CurrentSea
     }
   } else { // todo_ano
     plantingStatus = 'adequado';
-    timeWindow = 'Qualquer época com irrigação';
+    timeWindow = 'Qualquer época com rega';
   }
   
   // Estimativa da próxima fase crítica
   const nextCritical = {
     stage: 'Floração',
     daysUntil: Math.floor(crop.growthPeriod * 0.6), // Estimativa: floração aos 60% do ciclo
-    preparation: ['Ajustar irrigação', 'Monitorar pragas', 'Aplicar fertilizante']
+    preparation: ['Ajustar rega', 'Monitorizar pragas', 'Aplicar fertilizante']
   };
   
   // Previsão de colheita
@@ -351,7 +354,7 @@ export function generatePhaseSpecificRecommendations(crop: CropData, weather: We
     prePlanting: [
       'Preparar o solo com análise de pH e nutrientes',
       'Verificar disponibilidade de sementes certificadas',
-      'Planejar sistema de irrigação se necessário'
+      'Planear sistema de rega se necessário'
     ],
     planting: [
       'Plantar após as primeiras chuvas consistentes',
@@ -364,7 +367,7 @@ export function generatePhaseSpecificRecommendations(crop: CropData, weather: We
       'Manter controle de ervas daninhas'
     ],
     reproductive: [
-      'Aumentar frequência de irrigação durante floração',
+      'Aumentar frequência de rega durante floração',
       'Aplicar micronutrientes se necessário',
       'Proteger contra pragas específicas da fase reprodutiva'
     ],
@@ -463,9 +466,9 @@ export function generateAdvancedCropRecommendations(
         currentSuitability: timingScore >= 80 ? 'Época ideal para plantio' : 
                            timingScore >= 60 ? 'Época adequada com cuidados' : 'Fora da época recomendada',
         criticalUpcoming: [`Floração em ${Math.floor(crop.growthPeriod * 0.6)} dias`, 'Período de maior demanda hídrica'],
-        seasonalChallenges: currentSeason.season === 'wet' ? ['Excesso de umidade', 'Risco de doenças fúngicas'] : 
+        seasonalChallenges: currentSeason.season === 'wet' ? ['Excesso de humidade', 'Risco de doenças fúngicas'] : 
                            ['Deficit hídrico', 'Stress térmico'],
-        optimizationTips: ['Monitoramento constante do clima', 'Ajuste de irrigação conforme fenologia']
+        optimizationTips: ['Monitorização constante do clima', 'Ajuste de rega conforme fenologia']
       },
       stressAnalysis,
       bioclimaticIndices: {
@@ -479,7 +482,7 @@ export function generateAdvancedCropRecommendations(
       phaseSpecificRecommendations: phaseRecommendations,
       analysis: {
         strengths: ['Cultura adaptada à região', 'Conhecimento técnico disponível'],
-        challenges: ['Manejo de pragas específicas', 'Controle de irrigação'],
+        challenges: ['Maneio de pragas específicas', 'Controle de irrigação'],
         requirements: ['Solo bem drenado', 'Sementes certificadas'],
         recommendations: ['Plantio em época adequada', 'Monitoramento constante']
       },
@@ -527,6 +530,36 @@ export function generateSeasonalWeatherInsights(weather: WeatherData, selectedCr
   const insights: string[] = [];
   const currentSeason = getCurrentSeason(currentDate.getMonth() + 1);
   
+  // Insights específicos baseados em localização GPS
+  if (weather.locationSource === 'gps' && weather.latitude && weather.longitude) {
+    insights.push(`🛰️ Análise baseada na sua localização GPS precisa: ${weather.latitude.toFixed(4)}°, ${weather.longitude.toFixed(4)}°`);
+    
+    // Insights específicos para Moçambique baseados em coordenadas
+    if (weather.latitude >= -26.9 && weather.latitude <= -10.4 && weather.longitude >= 30.2 && weather.longitude <= 40.8) {
+      // Zona Norte (Cabo Delgado, Niassa, Nampula)
+      if (weather.latitude > -15) {
+        insights.push("🌍 Zona Norte de Moçambique: Clima tropical húmido - excelente para cashew, coco e algodão");
+      }
+      // Zona Centro (Sofala, Manica, Tete, Zambézia)
+      else if (weather.latitude > -20) {
+        insights.push("🌍 Zona Centro de Moçambique: Condições ideais para milho, arroz e tabaco");
+      }
+      // Zona Sul (Maputo, Gaza, Inhambane)
+      else {
+        insights.push("🌍 Zona Sul de Moçambique: Região adequada para cana-de-açúcar e citrinos");
+      }
+      
+      // Proximidade ao oceano (influência marítima)
+      if (weather.longitude > 35) {
+        insights.push("🌊 Proximidade ao oceano: Clima moderado pela influência marítima - menos extremos térmicos");
+      }
+      
+      // Adicionar análise de microlocalização
+      const microLocationInsights = analyzeGPSMicroLocation(weather.latitude, weather.longitude);
+      insights.push(...microLocationInsights);
+    }
+  }
+  
   // Insights sazonais gerais
   if (currentSeason.season === 'wet') {
     insights.push("🌧️ Estação chuvosa: Período ideal para culturas dependentes de chuva");
@@ -570,6 +603,37 @@ export function generateSeasonalWeatherInsights(weather: WeatherData, selectedCr
     // Insights fenológicos
     if (rec.scores.phenology < 60) {
       insights.push(`🌱 ${rec.cropName}: Condições inadequadas para desenvolvimento ótimo`);
+    }
+  });
+  
+  return insights;
+}
+
+// Função auxiliar para análise de microlocalização baseada em GPS
+function analyzeGPSMicroLocation(latitude: number, longitude: number): string[] {
+  const insights: string[] = [];
+  
+  // Análise de altitude estimada (aproximação baseada em latitude)
+  const estimatedAltitude = Math.max(0, (latitude + 25) * 50); // Estimativa simplificada
+  if (estimatedAltitude > 800) {
+    insights.push(`⛰️ Altitude elevada (≈${Math.round(estimatedAltitude)}m): Temperaturas mais amenas, cuidado com geadas`);
+  } else if (estimatedAltitude > 400) {
+    insights.push(`🏔️ Altitude média (≈${Math.round(estimatedAltitude)}m): Condições temperadas favoráveis`);
+  } else {
+    insights.push(`🌊 Altitude baixa (≈${Math.round(estimatedAltitude)}m): Clima mais quente e húmido`);
+  }
+  
+  // Análise de proximidade a corpos d'água (rios principais de Moçambique)
+  const rivers = [
+    { name: "Rio Zambeze", lat: -18.0, lng: 36.0 },
+    { name: "Rio Limpopo", lat: -24.0, lng: 33.0 },
+    { name: "Rio Save", lat: -21.0, lng: 34.5 }
+  ];
+  
+  rivers.forEach(river => {
+    const distance = Math.sqrt(Math.pow(latitude - river.lat, 2) + Math.pow(longitude - river.lng, 2));
+    if (distance < 1.0) { // Aproximadamente 100km
+      insights.push(`🏞️ Proximidade ao ${river.name}: Solo fértil de várzea, ideal para arroz e hortaliças`);
     }
   });
   

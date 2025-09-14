@@ -274,7 +274,7 @@ class OpenWeatherService:
                     'tipo_alerta': 'seca',
                     'nivel': 'medio',
                     'titulo': 'Condições de Seca',
-                    'descricao': f"Umidade baixa ({current['umidade']}%) e sem previsão de chuva. Considere irrigação.",
+                    'descricao': f"Umidade baixa ({current['umidade']}%) e sem previsão de chuva. Considere rega.",
                     'data_inicio': datetime.now().date().isoformat(),
                     'data_fim': (datetime.now() + timedelta(days=7)).date().isoformat()
                 })

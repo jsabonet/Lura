@@ -460,7 +460,7 @@ export default function CropSelector({
                 <span className="text-2xl">🌱</span>
               </div>
               <h3 className="text-xl font-bold text-white">
-                Seleção de Culturas
+                Selecção de Culturas
               </h3>
             </div>
             <p className="text-green-100 text-sm leading-relaxed">
@@ -492,7 +492,7 @@ export default function CropSelector({
                 <span className="block text-xs text-gray-500 dark:text-gray-400">
                   {selectedCrops.length === 0 
                     ? 'Clique para escolher suas culturas' 
-                    : 'Clique para editar seleção'
+                    : 'Clique para editar selecção'
                   }
                 </span>
               </div>

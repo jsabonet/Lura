@@ -134,10 +134,10 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
               </div>
             </div>
 
-            {/* Nome de Usuário */}
+            {/* Nome de Utilizador */}
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-green-700 dark:text-green-300 mb-1.5 sm:mb-2">
-                Nome de Usuário
+                Nome de Utilizador
               </label>
               <input
                 type="text"
@@ -146,7 +146,7 @@ export default function RegisterModal({ isOpen, onClose, onSwitchToLogin }: Regi
                 onChange={handleChange}
                 required
                 className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base border border-green-200/80 dark:border-green-700/80 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/60 focus:border-green-500/60 bg-white/90 dark:bg-green-900/40 text-green-900 dark:text-green-100 transition-all duration-200 placeholder-green-400/70 dark:placeholder-green-500/70 backdrop-blur-sm"
-                placeholder="Escolha um nome de usuário"
+                placeholder="Escolha um nome de utilizador"
               />
             </div>
 

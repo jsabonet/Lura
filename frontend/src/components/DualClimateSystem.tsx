@@ -235,7 +235,7 @@ export default function DualClimateSystemPage() {
                     <div className="bg-white/10 rounded-lg p-3">
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">💧</span>
-                        <span className="text-sm">Umidade</span>
+                        <span className="text-sm">Humidade</span>
                       </div>
                       <div className="text-2xl font-bold">{gpsWeather.humidity}%</div>
                     </div>

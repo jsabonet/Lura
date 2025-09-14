@@ -95,7 +95,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
 
             <div>
               <label htmlFor="username" className="block text-xs sm:text-sm font-semibold text-green-700 dark:text-green-300 mb-1.5 sm:mb-2">
-                Nome de Usuário
+                Nome de Utilizador
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-2.5 sm:pl-3 flex items-center pointer-events-none">
@@ -111,7 +111,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
                   onChange={handleChange}
                   required
                   className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 text-sm sm:text-base border border-green-200/80 dark:border-green-700/80 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500/60 focus:border-green-500 bg-white/90 dark:bg-green-900/90 text-green-900 dark:text-green-100 transition-all duration-200 placeholder-green-500/70 dark:placeholder-green-400/70 backdrop-blur-sm"
-                  placeholder="Seu nome de usuário"
+                  placeholder="Seu nome de utilizador"
                 />
               </div>
             </div>
