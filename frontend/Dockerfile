@@ -1,12 +1,19 @@
 # Dockerfile para Frontend (Next.js)
-FROM node:18-alpine AS base
+FROM node:18-bullseye-slim AS base
 
-# Dependências
+# Dependências para build (instaladas no estágio deps)
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+	   build-essential \
+	   python3 \
+	   python3-pip \
+	   ca-certificates \
+	   git \
+	&& rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --unsafe-perm
 
 # Build da aplicação
 FROM base AS builder
@@ -18,6 +25,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 
+# Garantir que node_modules nativo será construído com as ferramentas disponíveis
 RUN npm run build
 
 # Produção
@@ -27,8 +35,7 @@ WORKDIR /app
 ENV NODE_ENV production
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd --gid 1001 nodejs && useradd --uid 1001 --gid 1001 --create-home nextjs
 
 COPY --from=builder /app/public ./public
 
