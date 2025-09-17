@@ -47,8 +47,13 @@ RUN groupadd --gid 1001 nodejs && useradd --uid 1001 --gid 1001 --create-home ne
 COPY --from=builder /app/public ./public
 
 # Copiando arquivos de build
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+## Copy the contents of the Next.js standalone into the workdir so server.js is at /app/server.js
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/ ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy a small entrypoint to validate server file before starting
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chown nextjs:nodejs /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 USER nextjs
 
@@ -57,4 +62,4 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-CMD ["node", "server.js"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
