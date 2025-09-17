@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'recomendacoes',
     'mercado',
     'notificacoes',
-    'triangulacao',
+    'triangulacao',  
+    'ai',
 ]
 
 MIDDLEWARE = [
@@ -192,6 +193,18 @@ TWILIO_PHONE_NUMBER = config('TWILIO_PHONE_NUMBER', default='')
 
 # AI Models Configuration
 HUGGINGFACE_API_KEY = config('HUGGINGFACE_API_KEY', default='')
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID = config('FIREBASE_PROJECT_ID', default='lura-ai')
+FIREBASE_PRIVATE_KEY_ID = config('FIREBASE_PRIVATE_KEY_ID', default='')
+FIREBASE_PRIVATE_KEY = config('FIREBASE_PRIVATE_KEY', default='')
+FIREBASE_CLIENT_EMAIL = config('FIREBASE_CLIENT_EMAIL', default='')
+FIREBASE_CLIENT_ID = config('FIREBASE_CLIENT_ID', default='')
+FIREBASE_AUTH_URI = config('FIREBASE_AUTH_URI', default='https://accounts.google.com/o/oauth2/auth')
+FIREBASE_TOKEN_URI = config('FIREBASE_TOKEN_URI', default='https://oauth2.googleapis.com/token')
+
+# Vertex AI Configuration
+VERTEX_AI_LOCATION = config('VERTEX_AI_LOCATION', default='us-central1')
 
 # JWT Settings
 from datetime import timedelta

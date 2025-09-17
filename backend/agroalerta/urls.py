@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/mercado/', include('mercado.urls')),
     path('api/notificacoes/', include('notificacoes.urls')),
     path('api/triangulation/', include('triangulacao.urls')),
+    path('api/ai/', include('ai.urls')),
     # Healthcheck simples (não depende do DB)
     path('health/', lambda request: JsonResponse({"status": "ok"})),
 ]

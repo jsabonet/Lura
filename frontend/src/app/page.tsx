@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 export default function Home() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -9,7 +10,7 @@ export default function Home() {
 
   const handleGetStarted = () => {
     if (isAuthenticated) {
-      router.push('/dashboard');
+      router.push('/clima');
     } else {
       router.push('/register');
     }
@@ -19,29 +20,36 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-green-100 dark:from-green-900 dark:via-emerald-900 dark:to-green-800">
       {/* Header */}
       <header className="bg-white/80 dark:bg-green-800/80 backdrop-blur-sm border-b border-green-200 dark:border-green-700">
-        <div className="container mx-auto px-6 py-6">
-          <nav className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="text-2xl">🌾</div>
-              <h1 className="text-2xl font-bold text-green-800 dark:text-green-100">
-                AgroAlerta
+        <div className="container mx-auto px-3 py-3 sm:px-6 sm:py-6">
+          <nav className="flex flex-wrap items-center justify-between gap-y-2">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <Image
+                src="/logo.png"
+                alt="LuraFarm Logo"
+                width={32}
+                height={32}
+                className="w-auto h-6 sm:h-8"
+                priority
+              />
+              <h1 className="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-100">
+                LuraFarm
               </h1>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {isAuthenticated ? (
-                <div className="flex items-center space-x-4">
-                  <span className="text-green-700 dark:text-green-200 font-medium">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+                  <span className="text-sm sm:text-base text-green-700 dark:text-green-200 font-medium truncate max-w-[120px] sm:max-w-none">
                     Olá, {user?.first_name || user?.username}!
                   </span>
-                  <button
+                  {/* <button
                     onClick={() => router.push('/dashboard')}
                     className="px-4 py-2 text-green-700 hover:text-green-900 dark:text-green-200 dark:hover:text-white font-medium rounded-lg hover:bg-green-50 dark:hover:bg-green-700/50 transition-all duration-200"
                   >
                     Dashboard
-                  </button>
+                  </button> */}
                   <button
                     onClick={logout}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
                   >
                     Sair
                   </button>
@@ -50,13 +58,13 @@ export default function Home() {
                 <>
                   <button
                     onClick={() => router.push('/login')}
-                    className="px-4 py-2 text-green-700 hover:text-green-900 dark:text-green-200 dark:hover:text-white font-medium rounded-lg hover:bg-green-50 dark:hover:bg-green-700/50 transition-all duration-200"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base text-green-700 hover:text-green-900 dark:text-green-200 dark:hover:text-white font-medium rounded-lg hover:bg-green-50 dark:hover:bg-green-700/50 transition-all duration-200"
                   >
                     Entrar
                   </button>
                   <button
                     onClick={() => router.push('/register')}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
                   >
                     Registrar
                   </button>
@@ -84,7 +92,7 @@ export default function Home() {
                 onClick={handleGetStarted}
                 className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-10 py-4 rounded-xl text-lg font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >
-                {isAuthenticated ? 'Ir ao Dashboard' : 'Começar Agora'}
+                {isAuthenticated ? 'Ver Clima' : 'Começar Agora'}
               </button>
               <button
                 onClick={() => router.push('/sobre')}
@@ -97,7 +105,7 @@ export default function Home() {
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-8 mb-20">
           <div className="bg-white/80 dark:bg-green-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 text-center hover:shadow-2xl hover:bg-white dark:hover:bg-green-800 transition-all duration-300 cursor-pointer transform hover:scale-105"
                onClick={() => router.push('/clima')}>
             <div className="text-5xl mb-6">🌤️</div>
@@ -109,7 +117,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="bg-white/80 dark:bg-green-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 text-center hover:shadow-2xl hover:bg-white dark:hover:bg-green-800 transition-all duration-300 cursor-pointer transform hover:scale-105"
+          {/* <div className="bg-white/80 dark:bg-green-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 text-center hover:shadow-2xl hover:bg-white dark:hover:bg-green-800 transition-all duration-300 cursor-pointer transform hover:scale-105"
                onClick={() => router.push('/pragas')}>
             <div className="text-5xl mb-6">🐛</div>
             <h3 className="text-xl font-bold text-green-800 dark:text-green-100 mb-3">
@@ -118,9 +126,9 @@ export default function Home() {
             <p className="text-green-600 dark:text-green-200 leading-relaxed">
               Identifique pragas com IA através de fotos
             </p>
-          </div>
+          </div> */}
 
-          <div className="bg-white/80 dark:bg-green-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 text-center hover:shadow-2xl hover:bg-white dark:hover:bg-green-800 transition-all duration-300 cursor-pointer transform hover:scale-105"
+          {/* <div className="bg-white/80 dark:bg-green-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 text-center hover:shadow-2xl hover:bg-white dark:hover:bg-green-800 transition-all duration-300 cursor-pointer transform hover:scale-105"
                onClick={() => router.push('/chatbot')}>
             <div className="text-5xl mb-6">💬</div>
             <h3 className="text-xl font-bold text-green-800 dark:text-green-100 mb-3">
@@ -129,9 +137,9 @@ export default function Home() {
             <p className="text-green-600 dark:text-green-200 leading-relaxed">
               Chatbot inteligente com recomendações personalizadas
             </p>
-          </div>
+          </div> */}
 
-          <div className="bg-white/80 dark:bg-green-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 text-center hover:shadow-2xl hover:bg-white dark:hover:bg-green-800 transition-all duration-300 cursor-pointer transform hover:scale-105"
+          {/* <div className="bg-white/80 dark:bg-green-800/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 text-center hover:shadow-2xl hover:bg-white dark:hover:bg-green-800 transition-all duration-300 cursor-pointer transform hover:scale-105"
                onClick={() => router.push('/mercado')}>
             <div className="text-5xl mb-6">💰</div>
             <h3 className="text-xl font-bold text-green-800 dark:text-green-100 mb-3">
@@ -140,7 +148,7 @@ export default function Home() {
             <p className="text-green-600 dark:text-green-200 leading-relaxed">
               Preços em tempo real e tendências de mercado
             </p>
-          </div>
+          </div> */}
         </div>
 
         {/* Stats Section */}

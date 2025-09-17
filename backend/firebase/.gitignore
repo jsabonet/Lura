@@ -1,0 +1,31 @@
+# Firebase Security Rules
+# Configurações de segurança para Firebase
+
+# ⚠️  IMPORTANTE: Adicione estes padrões ao seu .gitignore
+
+# Credenciais Firebase (NUNCA commitar)
+*firebase-adminsdk*.json
+*service-account*.json
+firebase-credentials.json
+firebase-private-key.json
+
+# Variáveis de ambiente com credenciais
+.env
+.env.local
+.env.production
+.env.production.local
+.env.development.local
+
+# Backups de credenciais
+*.key
+*.pem
+credentials/
+secrets/
+
+# Logs que podem conter credenciais
+firebase-debug.log
+*.log
+
+# Arquivos temporários do Firebase
+.firebase/
+.firebaserc

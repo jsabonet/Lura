@@ -432,7 +432,7 @@ def gerar_resposta_clima(localizacao: str) -> dict:
 • Irrigação intensiva
 • Preparo para próxima safra
 
-**💡 Use nossa previsão meteorológica:** Para decisões mais precisas sobre plantio e manejo!"""
+**💡 Use nossa previsão meteorológica:** Para decisões mais precisas sobre plantio e maneio!"""
 
     return {
         'resposta': resposta,

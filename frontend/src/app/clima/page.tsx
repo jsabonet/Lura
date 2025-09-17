@@ -61,24 +61,24 @@ function ClimaPageContent() {
             
             {/* Navigation - Mobile Optimized */}
             <div className="flex flex-wrap gap-2 sm:space-x-4 justify-center sm:justify-end">
-              <Link
+              {/* <Link
                 href="/dashboard"
                 className="px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex-1 sm:flex-none text-center"
               >
                 Dashboard
-              </Link>
-              <Link
+              </Link> */}
+              {/* <Link
                 href="/pragas"
                 className="px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm flex-1 sm:flex-none text-center"
               >
                 Pragas
-              </Link>
-              <Link
+              </Link> */}
+              {/* <Link
                 href="/mercado"
                 className="px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm flex-1 sm:flex-none text-center"
               >
                 Mercado
-              </Link>
+              </Link> */}
               <Link
                 href="/alertas"
                 className="px-3 sm:px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm flex-1 sm:flex-none text-center"

@@ -19,10 +19,11 @@ O AgroAlerta é um sistema inteligente e gratuito de alerta agrícola desenvolvi
 - Base de dados de pragas comuns em Moçambique
 
 ### 💬 Assistente Agrícola (Chatbot)
-- Chatbot inteligente em português
-- Recomendações personalizadas por cultura
-- Dicas de manejo, irrigação e adubação
+- Chatbot inteligente em português (Firebase AI Logic/Vertex AI)
+- Recomendações personalizadas por cultura usando modelos Gemini/LLM
+- Dicas de manejo, irrigação e adubação com contexto local
 - Calendário agrícola interativo
+- Análise inteligente de pragas e doenças
 
 ### 💰 Mercado Agrícola
 - Preços atualizados de produtos agrícolas
@@ -73,6 +74,8 @@ frontend/
 - **JWT** - Autenticação
 - **TensorFlow/HuggingFace** - Modelos de IA
 - **OpenCV** - Processamento de imagens
+- **Firebase AI Logic** - Chatbot e análise de texto via Vertex AI
+- **Firebase App Check** - Segurança e validação de requisições
 
 #### Frontend
 - **Next.js 14** - Framework React
