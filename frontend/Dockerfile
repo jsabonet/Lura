@@ -20,6 +20,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# If a prebuilt .next exists in the build context, copy it in so we can skip the build
+COPY .next ./.next
 
 # Configurações de build
 ENV NEXT_TELEMETRY_DISABLED 1
@@ -28,13 +30,12 @@ ENV NODE_ENV production
 # Aumentar memória disponível para Node durante o build para evitar OOM/Bus errors
 ENV NODE_OPTIONS=--max_old_space_size=2048
 # Em ambientes com memória limitada, criamos temporariamente um swapfile para a etapa de build
-RUN fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048 \
-	&& chmod 600 /swapfile \
-	&& mkswap /swapfile \
-	&& swapon /swapfile \
-	&& npm run build || (echo "Primary build failed, retrying with reduced memory usage..." && NODE_OPTIONS=--max_old_space_size=1024 npm run build) \
-	&& swapoff /swapfile \
-	&& rm -f /swapfile
+RUN if [ -d ".next/standalone" ]; then echo "Found prebuilt .next/standalone — skipping build"; else \
+			fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048; \
+			chmod 600 /swapfile; mkswap /swapfile; swapon /swapfile; \
+			npm run build || (echo "Primary build failed, retrying with reduced memory usage..." && NODE_OPTIONS=--max_old_space_size=1024 npm run build); \
+			swapoff /swapfile; rm -f /swapfile; \
+		fi
 
 # Produção
 FROM base AS runner

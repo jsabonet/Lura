@@ -34,3 +34,30 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
+
+Local prebuild workflow for low-memory Docker hosts
+
+If your Docker host has limited memory and `next build` fails inside the container, build the frontend locally and then build the Docker image using the prebuilt `.next` folder.
+
+Steps (PowerShell):
+
+```powershell
+# From repository root
+cd frontend
+npm ci
+npm run build
+cd ..
+
+# Build the Docker image using the prebuilt .next
+docker compose build --no-cache frontend
+```
+
+Or use the included helper script:
+
+```powershell
+./frontend/scripts/docker-build-frontend.ps1
+```
+
+This copies the locally generated `.next/standalone` output into the image and skips the heavy `next build` step inside the container.
