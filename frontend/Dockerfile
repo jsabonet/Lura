@@ -20,6 +20,9 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Normalize nested Next outputs: if the build produced frontend/.next (or similar),
+# move it to /.next so later steps and the runner stage can find the production build.
+RUN if [ -d "frontend/.next" ] && [ ! -d ".next" ]; then mv frontend/.next .; fi
 # If a prebuilt .next exists in the build context, copy it in so we can skip the build
 # Configurações de build
 ENV NEXT_TELEMETRY_DISABLED 1
