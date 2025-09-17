@@ -27,8 +27,14 @@ ENV NODE_ENV production
 
 # Aumentar memória disponível para Node durante o build para evitar OOM/Bus errors
 ENV NODE_OPTIONS=--max_old_space_size=2048
-# Tenta o build normal; em ambientes com memória limitada, o build pode falhar com 'Bus error'
-RUN npm run build || (echo "Primary build failed, retrying with reduced memory usage..." && NODE_OPTIONS=--max_old_space_size=1024 npm run build)
+# Em ambientes com memória limitada, criamos temporariamente um swapfile para a etapa de build
+RUN fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048 \
+	&& chmod 600 /swapfile \
+	&& mkswap /swapfile \
+	&& swapon /swapfile \
+	&& npm run build || (echo "Primary build failed, retrying with reduced memory usage..." && NODE_OPTIONS=--max_old_space_size=1024 npm run build) \
+	&& swapoff /swapfile \
+	&& rm -f /swapfile
 
 # Produção
 FROM base AS runner
