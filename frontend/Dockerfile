@@ -56,8 +56,12 @@ COPY --from=builder /app/public ./public
 
 # Copiando arquivos de build
 ## Copy the contents of the Next.js standalone into the workdir so server.js is at /app/server.js
+# Copy standalone server files (server.js etc) into the workdir
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone/ ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Also copy the full .next build directory so the production build id and other
+# artifacts are available to the runtime server
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./
 
 # Copy a small entrypoint to validate server file before starting
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

@@ -16,6 +16,8 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    volumes:
+      - static_volume:/var/www/static
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s
