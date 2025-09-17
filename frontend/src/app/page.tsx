@@ -3,6 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -36,6 +37,12 @@ export default function Home() {
               </h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* <Link
+                href="/sobre"
+                className="text-sm sm:text-base text-green-700 dark:text-green-200 font-medium rounded-lg px-2 py-1 hover:bg-green-50 dark:hover:bg-green-700/50 transition-all duration-200"
+              >
+                Sobre
+              </Link> */}
               {isAuthenticated ? (
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                   <span className="text-sm sm:text-base text-green-700 dark:text-green-200 font-medium truncate max-w-[120px] sm:max-w-none">
@@ -94,12 +101,12 @@ export default function Home() {
               >
                 {isAuthenticated ? 'Ver Clima' : 'Começar Agora'}
               </button>
-              <button
-                onClick={() => router.push('/sobre')}
-                className="border-2 border-green-600 text-green-600 dark:text-green-400 dark:border-green-400 px-10 py-4 rounded-xl text-lg font-semibold hover:bg-green-600 hover:text-white dark:hover:bg-green-600 transition-all duration-300 backdrop-blur-sm"
+              <Link
+                href="/sobre"
+                className="border-2 border-green-600 text-green-600 dark:text-green-400 dark:border-green-400 px-10 py-4 rounded-xl text-lg font-semibold hover:bg-green-600 hover:text-white dark:hover:bg-green-600 transition-all duration-300 backdrop-blur-sm inline-flex items-center justify-center"
               >
                 Saiba Mais
-              </button>
+              </Link>
             </div>
           </div>
         </div>
