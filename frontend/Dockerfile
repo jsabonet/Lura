@@ -25,8 +25,10 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
 
-# Garantir que node_modules nativo será construído com as ferramentas disponíveis
-RUN npm run build
+# Aumentar memória disponível para Node durante o build para evitar OOM/Bus errors
+ENV NODE_OPTIONS=--max_old_space_size=2048
+# Tenta o build normal; em ambientes com memória limitada, o build pode falhar com 'Bus error'
+RUN npm run build || (echo "Primary build failed, retrying with reduced memory usage..." && NODE_OPTIONS=--max_old_space_size=1024 npm run build)
 
 # Produção
 FROM base AS runner
