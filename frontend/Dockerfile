@@ -21,8 +21,6 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # If a prebuilt .next exists in the build context, copy it in so we can skip the build
-COPY .next ./.next
-
 # Configurações de build
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
