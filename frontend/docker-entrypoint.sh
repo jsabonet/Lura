@@ -19,4 +19,11 @@ if [ -z "$SERVER_FILE" ]; then
 fi
 
 echo "Starting Node server: $SERVER_FILE" >&2
+# If nginx static volume is mounted, sync .next static files there for nginx to serve
+if [ -d "/var/www/static" ] && [ -w "/var/www/static" ]; then
+  echo "Syncing .next static files to /var/www/static/_next" >&2
+  mkdir -p /var/www/static/_next
+  cp -a "$APP_DIR/.next/static/." /var/www/static/_next/ || echo "Warning: failed to copy static files" >&2
+fi
+
 exec node "$SERVER_FILE"

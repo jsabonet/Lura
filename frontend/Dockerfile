@@ -29,11 +29,19 @@ ENV NODE_ENV production
 ENV NODE_OPTIONS=--max_old_space_size=2048
 # Em ambientes com memória limitada, criamos temporariamente um swapfile para a etapa de build
 RUN if [ -d ".next/standalone" ]; then echo "Found prebuilt .next/standalone — skipping build"; else \
-			fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048; \
-			chmod 600 /swapfile; mkswap /swapfile; swapon /swapfile; \
-			npm run build || (echo "Primary build failed, retrying with reduced memory usage..." && NODE_OPTIONS=--max_old_space_size=1024 npm run build); \
-			swapoff /swapfile; rm -f /swapfile; \
-		fi
+		fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048; \
+		chmod 600 /swapfile; mkswap /swapfile; swapon /swapfile; \
+		npm run build || (echo "Primary build failed, retrying with reduced memory usage..." && NODE_OPTIONS=--max_old_space_size=1024 npm run build); \
+		swapoff /swapfile; rm -f /swapfile; \
+	fi
+
+# If Next produced a standalone output that nests the app under a subfolder (e.g. 'frontend'),
+# move its contents up so server.js and .next/static are colocated at /app/.next/standalone
+RUN if [ -d ".next/standalone" ]; then \
+    cd .next/standalone && items=$(ls -1A) && set -- $items && if [ $# -eq 1 ] && [ -d "$1" ]; then \
+      mv "$1"/* . || true; rmdir "$1" || true; \
+    fi; \
+  fi
 
 # Produção
 FROM base AS runner
