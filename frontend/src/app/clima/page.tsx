@@ -188,7 +188,7 @@ function ClimaPageContent() {
         {/* Quick Actions - Mobile Optimized */}
         <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <Link
-            href="/pragas"
+            href="#"
             className="block p-4 sm:p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-slate-800 transition-colors"
           >
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -201,7 +201,7 @@ function ClimaPageContent() {
           </Link>
 
           <Link
-            href="/mercado"
+            href="#"
             className="block p-4 sm:p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-slate-800 transition-colors"
           >
             <div className="flex items-center space-x-3 sm:space-x-4">
@@ -214,7 +214,7 @@ function ClimaPageContent() {
           </Link>
 
           <Link
-            href="/recomendacoes"
+            href="#"
             className="block p-4 sm:p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-white dark:hover:bg-slate-800 transition-colors sm:col-span-2 lg:col-span-1"
           >
             <div className="flex items-center space-x-3 sm:space-x-4">
