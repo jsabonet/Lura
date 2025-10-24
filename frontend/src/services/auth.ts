@@ -54,6 +54,20 @@ export interface PerfilAgricultor {
 }
 
 class AuthService {
+  async loginRaw(username: string, password: string) {
+    const res = await apiService.post<{ user?: any; access?: string; refresh?: string; message?: string; error?: string }>(
+      '/users/login/',
+      { username, password }
+    );
+    if (res.data?.access) {
+      localStorage.setItem('access_token', res.data.access);
+    }
+    if (res.data?.refresh) {
+      localStorage.setItem('refresh_token', res.data.refresh);
+    }
+    return res;
+  }
+
   async login(credentials: LoginCredentials) {
     const response = await apiService.post<AuthTokens>('/users/login/', credentials);
     
@@ -118,3 +132,4 @@ class AuthService {
 }
 
 export const authService = new AuthService();
+export default authService;

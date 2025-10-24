@@ -7,18 +7,22 @@ import { apiService } from './api';
 export interface AIResponse {
   success: boolean;
   content?: string;
+  content_html?: string;
   error?: string;
   usage?: {
     promptTokens?: number;
     candidatesTokens?: number;
     totalTokens?: number;
   };
+  truncated?: boolean;
 }
 
 export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
+  content_html?: string;
   timestamp?: Date;
+  truncated?: boolean;
 }
 
 class AIService {
@@ -38,13 +42,6 @@ class AIService {
    */
   async generateText(prompt: string): Promise<AIResponse> {
     try {
-      if (!this.isAvailable) {
-        return {
-          success: false,
-          error: 'Vertex AI não está disponível. Verifique a configuração do Firebase.',
-        };
-      }
-
       if (!prompt || prompt.trim().length === 0) {
         return {
           success: false,
@@ -52,7 +49,7 @@ class AIService {
         };
       }
 
-      // Se estiver usando proxy no backend, encaminhar ao endpoint do servidor
+      // Prefer backend proxy when enabled (works even if Vertex client SDK isn't initialized)
       if (useBackendProxy) {
         // Usar o apiService para fazer a requisição
         const response = await apiService.post<AIResponse>('/ai/proxy/generate/', { prompt });
@@ -67,6 +64,14 @@ class AIService {
         return response.data || {
           success: false,
           error: 'Resposta vazia do servidor'
+        };
+      }
+
+      // Client-side Vertex AI fallback when not using backend proxy
+      if (!this.isAvailable) {
+        return {
+          success: false,
+          error: 'Vertex AI não está disponível. Verifique a configuração do Firebase.',
         };
       }
 
@@ -97,47 +102,26 @@ class AIService {
    */
   async chatWithContext(messages: ChatMessage[]): Promise<AIResponse> {
     try {
+      // Prefer backend proxy for chat with context
+      if (useBackendProxy) {
+        const response = await apiService.post<AIResponse>('/ai/proxy/chat/', { messages });
+        if (response.error) {
+          // Fallback: if unauthorized (401), degrade to single-prompt generateText
+          if (response.status === 401) {
+            const combined = this.combineMessagesIntoPrompt(messages);
+            return this.generateText(combined);
+          }
+          return { success: false, error: response.error } as AIResponse;
+        }
+        return response.data || { success: false, error: 'Resposta vazia do servidor' };
+      }
+
+      // Client-side fallback only when not using proxy
       if (!this.isAvailable) {
         return {
           success: false,
           error: 'Vertex AI não está disponível.',
         };
-      }
-
-      // Se usar proxy, encaminhar para o backend (mantendo o mesmo formato de mensagens)
-      if (useBackendProxy) {
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
-        // Obter token de acesso usando a mesma chave que api.ts
-        const accessToken = localStorage.getItem('access_token');
-        
-        if (!accessToken) {
-          return {
-            success: false,
-            error: 'Usuário não está autenticado. Faça login primeiro.',
-          };
-        }
-
-        // Definir headers básicos usando o mesmo padrão do api.ts
-        const headers: HeadersInit = {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${accessToken}`
-        };
-
-        // Adicionar App Check token apenas em produção
-        if (process.env.NODE_ENV === 'production') {
-          const appCheckToken = await this.getAppCheckToken();
-          if (appCheckToken) {
-            headers['X-Firebase-AppCheck'] = appCheckToken;
-          }
-        }
-
-        const res = await fetch(`${baseUrl}/ai/proxy/chat/`, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ messages })
-        });
-        const payload = await res.json();
-        return payload as AIResponse;
       }
 
       // Garantir que a primeira mensagem é do usuário
@@ -179,6 +163,25 @@ class AIService {
         error: error instanceof Error ? error.message : 'Erro desconhecido',
       };
     }
+  }
+
+  private combineMessagesIntoPrompt(messages: ChatMessage[]): string {
+    const parts: string[] = [];
+    // Include system prompt if present
+    const system = messages.find(m => m.role === 'system');
+    if (system) {
+      parts.push(`Instruções do sistema:\n${system.content}`);
+    }
+    // Include last ~12 messages for context
+    const history = messages.filter(m => m.role !== 'system');
+    const selected = history.slice(-12);
+    parts.push('Histórico:');
+    selected.forEach(m => {
+      const who = m.role === 'user' ? 'Usuário' : 'Assistente';
+      parts.push(`${who}: ${m.content}`);
+    });
+    parts.push('\nResponda à última mensagem do Usuário considerando o histórico.');
+    return parts.join('\n');
   }
 
   /**
@@ -243,6 +246,30 @@ Por favor, forneça:
 5. Quando procurar ajuda profissional`;
 
     return this.generateText(prompt);
+  }
+
+  /**
+   * Análise de pragas (versão simplificada para routing inteligente)
+   */
+  async analyzePest(query: string): Promise<AIResponse> {
+    const systemPrompt = `Você é um especialista em controle de pragas e doenças agrícolas em Moçambique.
+    Forneça análises detalhadas, identificação de pragas/doenças, sintomas, tratamentos orgânicos e químicos,
+    e medidas preventivas. Seja prático e considere o contexto local de Moçambique.`;
+
+    const enhancedPrompt = `${systemPrompt}\n\nConsulta: ${query}`;
+    return this.generateText(enhancedPrompt);
+  }
+
+  /**
+   * Recomendações de culturas
+   */
+  async getCropRecommendation(query: string): Promise<AIResponse> {
+    const systemPrompt = `Você é um consultor agrícola especializado em recomendações de culturas para Moçambique.
+    Considere clima, solo, época do ano, mercado local, e viabilidade econômica ao recomendar culturas.
+    Forneça informações sobre calendário de plantio, cuidados necessários, e expectativas de produção.`;
+
+    const enhancedPrompt = `${systemPrompt}\n\nConsulta: ${query}`;
+    return this.generateText(enhancedPrompt);
   }
 
   /**

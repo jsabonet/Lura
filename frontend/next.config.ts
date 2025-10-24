@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from 'path';
 
 const nextConfig: NextConfig = {
   eslint: {
@@ -20,6 +21,8 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Corrige tracing de arquivos em monorepo (raiz em ../)
+  outputFileTracingRoot: path.join(__dirname, '..'),
   // Configurações para resolver problemas de desenvolvimento
   async headers() {
     return [

@@ -11,6 +11,7 @@ urlpatterns = [
     # Endpoints de proxy para Firebase AI Logic
     path('proxy/generate/', views.AIProxyGenerateView.as_view(), name='ai-proxy-generate'),
     path('proxy/chat/', views.AIChatProxyView.as_view(), name='ai-proxy-chat'),
+    path('proxy/chat/stream/', views.AIChatStreamView.as_view(), name='ai-proxy-chat-stream'),
     
     # Geração de texto
     path('generate/', views.TextGenerationView.as_view(), name='ai-generate'),

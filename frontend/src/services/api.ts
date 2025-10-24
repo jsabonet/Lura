@@ -28,6 +28,7 @@ class ApiService {
   ): Promise<ApiResponse<T>> {
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
+        credentials: 'include',
         headers: {
           ...this.getAuthHeaders(),
           ...options.headers,

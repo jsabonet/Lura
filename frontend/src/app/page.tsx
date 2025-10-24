@@ -184,7 +184,7 @@ export default function Home() {
       <footer className="bg-white/60 dark:bg-green-800/60 backdrop-blur-sm border-t border-green-200 dark:border-green-700">
         <div className="container mx-auto px-6 py-8 text-center">
           <p className="text-green-600 dark:text-green-300 font-medium">
-            &copy; 2025 AgroAlerta. Sistema gratuito para agricultores de Moçambique.
+            &copy; 2025 LuraFarm. Sistema gratuito para agricultores de Moçambique.
           </p>
         </div>
       </footer>

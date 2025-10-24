@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AgroAlerta - Sistema Inteligente de Alerta Agrícola",
+  title: "LuraFarm - Sistema Inteligente de Alerta Agrícola",
   description: "Sistema gratuito de alerta agrícola para Moçambique. Previsões climáticas, detecção de pragas por IA, recomendações personalizadas e informações de mercado.",
   manifest: '/manifest.json',
   icons: {

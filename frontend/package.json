@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+  "predev": "node ./scripts/fix-server-chunks.js",
+  "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+  "prestart": "node ./scripts/fix-server-chunks.js",
+  "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {

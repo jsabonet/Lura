@@ -35,3 +35,331 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Animação do cursor de digitação (estilo IA) */
+@keyframes blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes typing-cursor {
+  0%, 49% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  50%, 100% {
+    opacity: 0;
+    transform: scaleY(0.8);
+  }
+}
+
+.animate-typing-cursor {
+  animation: blink 1s step-end infinite;
+}
+
+/* Estilos para formatação de mensagens AI com Markdown */
+.ai-message-content {
+  line-height: 1.6;
+  color: inherit;
+}
+
+.ai-message-content h1,
+.ai-message-content h2,
+.ai-message-content h3,
+.ai-message-content h4,
+.ai-message-content h5,
+.ai-message-content h6 {
+  font-weight: 700;
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+  color: inherit;
+}
+
+/* Primeiro cabeçalho não tem margem superior */
+.ai-message-content h1:first-child,
+.ai-message-content h2:first-child,
+.ai-message-content h3:first-child,
+.ai-message-content h4:first-child,
+.ai-message-content h5:first-child,
+.ai-message-content h6:first-child {
+  margin-top: 0;
+}
+
+.ai-message-content h1 { font-size: 1.5rem; }
+.ai-message-content h2 { font-size: 1.25rem; }
+.ai-message-content h3 { font-size: 1.125rem; }
+.ai-message-content h4 { font-size: 1rem; }
+.ai-message-content h5 { font-size: 0.95rem; }
+.ai-message-content h6 { font-size: 0.9rem; }
+
+.ai-message-content p {
+  margin-top: 0;
+  margin-bottom: 0.75em;
+}
+
+/* Último parágrafo sem margem inferior */
+.ai-message-content p:last-child {
+  margin-bottom: 0;
+}
+
+.ai-message-content strong {
+  font-weight: 700;
+  color: inherit;
+}
+
+.ai-message-content em {
+  font-style: italic;
+}
+
+.ai-message-content del {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.ai-message-content code {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.875em;
+  color: #d63384;
+}
+
+.ai-message-content pre {
+  background: #f6f8fa;
+  border: 1px solid #e1e4e8;
+  border-radius: 6px;
+  padding: 0.875em;
+  overflow-x: auto;
+  margin: 0.75em 0;
+  line-height: 1.45;
+}
+
+.ai-message-content pre code {
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 0.85em;
+  line-height: inherit;
+}
+
+/* Espaçamento para blocos de código adjacentes */
+.ai-message-content p + pre {
+  margin-top: 0.625em;
+}
+
+.ai-message-content pre + p {
+  margin-top: 0.75em;
+}
+
+.ai-message-content ul,
+.ai-message-content ol {
+  margin: 0.5em 0;
+  padding-left: 1.75em;
+}
+
+.ai-message-content ul {
+  list-style-type: disc;
+}
+
+.ai-message-content ol {
+  list-style-type: decimal;
+}
+
+.ai-message-content li {
+  margin: 0.25em 0;
+  line-height: 1.5;
+  padding-left: 0.25em;
+}
+
+.ai-message-content li > ul,
+.ai-message-content li > ol {
+  margin: 0.25em 0;
+}
+
+/* Espaçamento especial para listas adjacentes a outros elementos */
+.ai-message-content p + ul,
+.ai-message-content p + ol {
+  margin-top: 0.5em;
+}
+
+.ai-message-content ul + p,
+.ai-message-content ol + p {
+  margin-top: 0.75em;
+}
+
+.ai-message-content blockquote {
+  border-left: 3px solid #22c55e;
+  padding-left: 0.875em;
+  margin: 0.75em 0;
+  font-style: italic;
+  color: #6b7280;
+  background: rgba(34, 197, 94, 0.05);
+  padding: 0.625em 0.875em;
+  border-radius: 4px;
+}
+
+.ai-message-content blockquote p {
+  margin: 0;
+}
+
+.ai-message-content hr {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 1.25em 0;
+}
+
+.ai-message-content a {
+  color: #16a34a;
+  text-decoration: underline;
+  font-weight: 500;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.ai-message-content a:hover {
+  color: #15803d;
+  text-decoration: none;
+}
+
+/* Tabelas */
+.ai-message-content .table-wrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ai-message-content table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 500px;
+  font-size: 0.9em;
+  background: white;
+}
+
+.ai-message-content th,
+.ai-message-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.75em 1em;
+  text-align: left;
+  line-height: 1.5;
+}
+
+.ai-message-content th {
+  background: linear-gradient(to bottom, #f9fafb, #f3f4f6);
+  font-weight: 600;
+  color: #374151;
+  text-transform: capitalize;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.ai-message-content tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.ai-message-content tbody tr:hover {
+  background: #f0fdf4;
+  transition: background 0.15s ease;
+}
+
+.ai-message-content td strong {
+  color: #16a34a;
+}
+
+/* Primeira coluna mais destacada (geralmente critérios) */
+.ai-message-content td:first-child {
+  font-weight: 500;
+  color: #374151;
+  background: #fafafa;
+}
+
+.ai-message-content tbody tr:hover td:first-child {
+  background: #f0fdf4;
+}
+
+/* Listas dentro de células de tabela */
+.ai-message-content td ul,
+.ai-message-content td ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.ai-message-content td li {
+  margin: 0.25em 0;
+  line-height: 1.4;
+}
+
+.ai-message-content td ul {
+  list-style-type: disc;
+}
+
+.ai-message-content td ol {
+  list-style-type: decimal;
+}
+
+/* <br> dentro de células */
+.ai-message-content td br {
+  display: block;
+  margin: 0.25em 0;
+  content: "";
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .ai-message-content h1 { font-size: 1.375rem; }
+  .ai-message-content h2 { font-size: 1.125rem; }
+  .ai-message-content h3 { font-size: 1rem; }
+  .ai-message-content h4 { font-size: 0.95rem; }
+  
+  .ai-message-content pre {
+    padding: 0.625em;
+    font-size: 0.8em;
+  }
+  
+  .ai-message-content ul,
+  .ai-message-content ol {
+    padding-left: 1.5em;
+  }
+  
+  .ai-message-content table {
+    font-size: 0.85em;
+  }
+  
+  .ai-message-content th,
+  .ai-message-content td {
+    padding: 0.4em 0.6em;
+  }
+}
+
+/* Estilos especiais para mensagens do usuário (fundo escuro) */
+.user-message .ai-message-content code {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fbbf24;
+}
+
+.user-message .ai-message-content pre {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.user-message .ai-message-content blockquote {
+  border-left-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.user-message .ai-message-content a {
+  color: #bef264;
+}
+
+.user-message .ai-message-content a:hover {
+  color: #a3e635;
+}

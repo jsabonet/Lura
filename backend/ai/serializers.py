@@ -142,15 +142,3 @@ class AIProxyChatSerializer(serializers.Serializer):
                 )
         
         return value
-    description = serializers.CharField(max_length=8000)
-    crop_type = serializers.CharField(max_length=100, required=False)
-    symptoms = serializers.ListField(
-        child=serializers.CharField(max_length=200),
-        required=False,
-        allow_empty=True
-    )
-    
-    def validate_description(self, value):
-        if not value.strip():
-            raise serializers.ValidationError("Descrição não pode estar vazia")
-        return value.strip()

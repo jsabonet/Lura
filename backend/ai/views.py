@@ -5,8 +5,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.utils import timezone
 from django.db.models import F
+from django.http import StreamingHttpResponse
 import asyncio
 import time
+import json
 
 from .models import AIConversation, AIMessage, AIUsageStats, AIFeedback
 from .serializers import (
@@ -19,6 +21,16 @@ from .serializers import (
     AIProxyChatSerializer
 )
 from firebase.ai_service import FirebaseAIService
+import logging
+
+logger = logging.getLogger(__name__)
+
+def _extract_content_from_result(result: dict) -> str:
+    # Support both 'content' (legacy) and 'text' (new) result keys
+    if not isinstance(result, dict):
+        return ''
+    text = result.get('content') or result.get('text') or result.get('message') or ''
+    return text
 
 
 # Rate limiting e App Check decorators
@@ -104,11 +116,18 @@ class AIProxyGenerateView(APIView):
         processing_time = time.time() - start_time
         
         if result['success']:
+            content = _extract_content_from_result(result)
+            if not content:
+                logger.error('AI generate_text succeeded but returned no content: %s', result)
+                return Response({'success': False, 'error': 'Modelo retornou sem conteúdo'}, status=status.HTTP_502_BAD_GATEWAY)
             return Response({
                 'success': True,
-                'content': result['content'],
+                'content': content,
+                'content_html': result.get('content_html'),
                 'model': result.get('model', 'unknown'),
                 'usage': result.get('usage', {}),
+                'truncated': result.get('truncated', False),
+                'finish_reason': result.get('finish_reason'),
                 'processing_time': processing_time
             })
         else:
@@ -154,9 +173,12 @@ class AIChatProxyView(APIView):
             return Response({
                 'success': True,
                 'content': result['content'],
+                'content_html': result.get('content_html'),
                 'model': result.get('model', 'unknown'),
                 'conversation_id': result.get('conversation_id'),
                 'usage': result.get('usage', {}),
+                'truncated': result.get('truncated', False),
+                'finish_reason': result.get('finish_reason'),
                 'processing_time': processing_time
             })
         else:
@@ -164,6 +186,99 @@ class AIChatProxyView(APIView):
                 'success': False,
                 'error': result['error']
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AIChatStreamView(APIView):
+    """View para chat com streaming em tempo real (Server-Sent Events)"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    @rate_limit("ai_chat_stream", limit=20, period=60)
+    def post(self, request):
+        """
+        Endpoint de streaming que retorna chunks de texto conforme são gerados
+        Usa Server-Sent Events (SSE) para streaming real
+        """
+        serializer = AIProxyChatSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        ai_service = FirebaseAIService()
+        if not ai_service.is_configured:
+            return Response(
+                {'error': 'Firebase AI não está configurado'},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        
+        # Converter mensagens para prompt (última mensagem do usuário)
+        messages = serializer.validated_data['messages']
+        if not messages:
+            return Response(
+                {'error': 'Nenhuma mensagem fornecida'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Construir contexto do chat
+        prompt_parts = []
+        for msg in messages[:-1]:  # Todas menos a última
+            role = "Assistente" if msg['role'] == 'assistant' else "Usuário"
+            prompt_parts.append(f"{role}: {msg['content']}")
+        
+        # Adicionar a última mensagem (atual)
+        last_message = messages[-1]['content']
+        if prompt_parts:
+            full_prompt = "\n\n".join(prompt_parts) + f"\n\nUsuário: {last_message}\n\nAssistente:"
+        else:
+            full_prompt = last_message
+        
+        # Função geradora para o streaming
+        async def event_stream():
+            """Gera eventos SSE conforme chunks chegam"""
+            try:
+                async for chunk in ai_service.generate_text_stream(
+                    prompt=full_prompt,
+                    model_name=serializer.validated_data.get('model', 'gemini-pro')
+                ):
+                    # Formato SSE: data: {json}\n\n
+                    data = json.dumps(chunk, ensure_ascii=False)
+                    yield f"data: {data}\n\n"
+                    
+                    # Se terminou, encerrar stream
+                    if chunk.get('done'):
+                        break
+            
+            except Exception as e:
+                logger.error(f"Erro no streaming: {e}")
+                error_data = json.dumps({
+                    'type': 'error',
+                    'error': str(e),
+                    'done': True
+                })
+                yield f"data: {error_data}\n\n"
+        
+        # Função síncrona wrapper para StreamingHttpResponse
+        def sync_event_stream():
+            """Wrapper síncrono para o async generator"""
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                async_gen = event_stream()
+                while True:
+                    try:
+                        chunk = loop.run_until_complete(async_gen.__anext__())
+                        yield chunk
+                    except StopAsyncIteration:
+                        break
+            finally:
+                loop.close()
+        
+        # Retornar resposta de streaming
+        response = StreamingHttpResponse(
+            sync_event_stream(),
+            content_type='text/event-stream'
+        )
+        response['Cache-Control'] = 'no-cache'
+        response['X-Accel-Buffering'] = 'no'  # Desabilita buffering no nginx
+        return response
 
 
 class AIStatusView(APIView):
@@ -223,11 +338,16 @@ class TextGenerationView(APIView):
         if result['success']:
             # Atualizar estatísticas de uso
             self._update_usage_stats(request.user, processing_time, result.get('usage', {}))
-            
+
+            content = _extract_content_from_result(result)
+            if not content:
+                logger.error('TextGeneration succeeded but returned no content: %s', result)
+                return Response({'success': False, 'error': 'Modelo retornou sem conteúdo'}, status=status.HTTP_502_BAD_GATEWAY)
+
             return Response({
                 'success': True,
-                'content': result['content'],
-                'model': result['model'],
+                'content': content,
+                'model': result.get('model', 'unknown'),
                 'usage': result.get('usage', {}),
                 'processing_time': processing_time
             })

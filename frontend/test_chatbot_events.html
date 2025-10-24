@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Eventos - Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #16a34a;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f0fdf4;
+            border-left: 4px solid #16a34a;
+            border-radius: 4px;
+        }
+        .checklist li::before {
+            content: '☐ ';
+            color: #16a34a;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .url-info {
+            background: #eff6ff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Teste de Eventos - Chatbot Lura</h1>
+    
+    <div class="test-section">
+        <h2>📋 Lista de Verificação</h2>
+        <ul class="checklist">
+            <li>Botão "Menu" (hambúrguer) abre/fecha sidebar</li>
+            <li>Botão "Nova Conversa" no sidebar cria nova conversa</li>
+            <li>Botão "X" no sidebar fecha o sidebar (mobile)</li>
+            <li>Cards de categoria (Cultivo, Pragas, Irrigação, Culturas) enviam mensagem</li>
+            <li>Botões de exemplo ("Como plantar milho?", etc) enviam mensagem</li>
+            <li>Botão "Anexar imagem" abre seletor de arquivo</li>
+            <li>Textarea aceita digitação</li>
+            <li>Botão "Enviar" (seta) envia mensagem</li>
+            <li>Enter no textarea envia mensagem</li>
+            <li>Botão "Copiar" em respostas copia texto</li>
+            <li>Botão "Regenerar" regenera resposta</li>
+            <li>FAB "+" (mobile) cria nova conversa</li>
+            <li>Clique em conversa no histórico alterna conversas</li>
+            <li>Botão "Lixeira" em conversa exclui conversa</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 URL da Aplicação</h2>
+        <div class="url-info">
+            http://localhost:3002/chatbot
+        </div>
+        <p>
+            <a href="http://localhost:3002/chatbot" target="_blank" 
+               style="display: inline-block; padding: 10px 20px; background: #16a34a; color: white; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                🚀 Abrir Chatbot em Nova Aba
+            </a>
+        </p>
+    </div>
+
+    <div class="test-section">
+        <h2>🖥️ Preview Embutido</h2>
+        <div class="iframe-container">
+            <iframe src="http://localhost:3002/chatbot"></iframe>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🐛 Problemas Resolvidos</h2>
+        <ul>
+            <li><strong>Overlay bloqueando cliques:</strong> Removido overlay que tinha z-index 40 e bloqueava header (z-30) e input (z-20)</li>
+            <li><strong>Backdrop correto:</strong> Backdrop agora só aparece em mobile e permite cliques no conteúdo principal</li>
+            <li><strong>Z-index hierarchy:</strong> Main content tem z-10, garantindo que fique acima do backdrop (z-40) quando sidebar está fechado</li>
+            <li><strong>handleSubmit com override:</strong> Função aceita promptOverride para permitir envio direto dos cards e exemplos</li>
+            <li><strong>Sidebar fecha em mobile:</strong> Estado inicial fechado em mobile, abre automaticamente em desktop</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Como Testar no Console</h2>
+        <p>Abra o DevTools (F12) e execute:</p>
+        <pre style="background: #1f2937; color: #10b981; padding: 15px; border-radius: 6px; overflow-x: auto;">
+// Verificar se handleSubmit existe
+console.log('handleSubmit exists:', typeof window.handleSubmit);
+
+// Verificar z-index dos elementos
+const overlay = document.querySelector('[class*="z-40"]');
+const main = document.querySelector('main');
+const header = document.querySelector('header');
+console.log('Overlay z-index:', overlay ? window.getComputedStyle(overlay).zIndex : 'N/A');
+console.log('Main z-index:', main ? window.getComputedStyle(main).zIndex : 'N/A');
+console.log('Header z-index:', header ? window.getComputedStyle(header).zIndex : 'N/A');
+
+// Verificar se eventos estão anexados
+const buttons = document.querySelectorAll('button');
+console.log('Total de botões:', buttons.length);
+buttons.forEach((btn, i) => {
+    const hasClick = btn.onclick || btn.getAttribute('onclick');
+    if (hasClick) console.log(`Botão ${i} tem onClick:`, hasClick);
+});
+        </pre>
+    </div>
+</body>
+</html>
