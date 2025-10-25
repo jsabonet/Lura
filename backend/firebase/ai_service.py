@@ -368,10 +368,10 @@ class FirebaseAIService:
             return None, None
     
     async def generate_text(
-        self, 
-        prompt: str, 
+        self,
+        prompt: str,
         model_name: str = None,
-        max_output_tokens: int = 1024,
+        max_output_tokens: int = 4096,  # Aumentado de 1024 para 4096
         temperature: float = 0.7,
         top_p: float = 0.8,
         top_k: int = 40
@@ -764,7 +764,7 @@ class FirebaseAIService:
         self,
         prompt: str,
         model_name: str = None,
-        max_output_tokens: int = 1024,
+        max_output_tokens: int = 4096,  # Aumentado de 1024 para 4096 para respostas mais completas
         temperature: float = 0.7,
         top_p: float = 0.8,
         top_k: int = 40
@@ -1115,7 +1115,7 @@ class FirebaseAIService:
         return await self.generate_text(
             prompt,
             temperature=0.7,
-            max_output_tokens=1024
+            max_output_tokens=4096  # Aumentado para respostas mais detalhadas
         )
     
     async def pest_disease_analysis(

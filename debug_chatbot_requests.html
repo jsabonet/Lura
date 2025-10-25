@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🔍 Debug - Monitor de Requisições do Chatbot</title>
+    <style>
+        body { 
+            font-family: 'Courier New', monospace; 
+            padding: 20px; 
+            background: #1a1a1a; 
+            color: #e0e0e0; 
+        }
+        .container { 
+            max-width: 1400px; 
+            margin: 0 auto; 
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .section { 
+            margin: 20px 0; 
+            padding: 20px; 
+            background: #2d2d2d; 
+            border-radius: 8px; 
+            border-left: 4px solid #667eea;
+        }
+        .title { 
+            color: #667eea; 
+            font-weight: bold; 
+            font-size: 18px;
+            margin-bottom: 15px; 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .log-entry {
+            padding: 12px;
+            margin: 8px 0;
+            background: #1a1a1a;
+            border-radius: 6px;
+            border-left: 3px solid #4CAF50;
+            font-size: 13px;
+        }
+        .log-entry.error {
+            border-left-color: #f44336;
+            background: #2a1a1a;
+        }
+        .log-entry.warning {
+            border-left-color: #ff9800;
+            background: #2a2410;
+        }
+        .timestamp {
+            color: #888;
+            font-size: 11px;
+        }
+        .method {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 11px;
+            margin-right: 8px;
+        }
+        .method.GET { background: #2196F3; color: white; }
+        .method.POST { background: #4CAF50; color: white; }
+        .method.PATCH { background: #FF9800; color: white; }
+        .method.DELETE { background: #f44336; color: white; }
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 11px;
+            margin-left: 8px;
+        }
+        .status.success { background: #4CAF50; color: white; }
+        .status.error { background: #f44336; color: white; }
+        .json-view {
+            background: #1a1a1a;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-top: 8px;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        button:hover { 
+            background: #764ba2; 
+            transform: translateY(-2px);
+        }
+        button.danger {
+            background: #f44336;
+        }
+        button.danger:hover {
+            background: #d32f2f;
+        }
+        .key { color: #64B5F6; }
+        .value { color: #81C784; }
+        .string { color: #FFD54F; }
+        .number { color: #FF8A65; }
+        .counter {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Monitor de Requisições - Chatbot AgroAlerta</h1>
+            <p>Interceptando todas as chamadas à API para diagnosticar problema de salvamento</p>
+        </div>
+
+        <div class="section">
+            <div class="title">
+                📊 Estatísticas
+                <button onclick="clearLogs()" class="danger" style="margin-left: auto;">🗑️ Limpar</button>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-requests">0</div>
+                    <div class="stat-label">Total de Requisições</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-success">0</div>
+                    <div class="stat-label">✅ Sucessos (200-299)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-errors">0</div>
+                    <div class="stat-label">❌ Erros (400+)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="messages-saved">0</div>
+                    <div class="stat-label">💾 Mensagens Salvas</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="title">
+                📡 Log de Requisições
+                <span class="counter" id="log-counter">0 logs</span>
+            </div>
+            <div id="request-logs"></div>
+        </div>
+
+        <div class="section">
+            <div class="title">
+                ⚠️ Problemas Detectados
+                <span class="counter" id="problem-counter" style="background: #f44336;">0 problemas</span>
+            </div>
+            <div id="problems-detected"></div>
+        </div>
+    </div>
+
+    <script>
+        let requestCount = 0;
+        let successCount = 0;
+        let errorCount = 0;
+        let messagesSaved = 0;
+        let problems = [];
+
+        // Interceptar fetch original
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            const [url, options] = args;
+            const startTime = Date.now();
+            
+            // Log requisição
+            logRequest('outgoing', url, options);
+            
+            try {
+                const response = await originalFetch.apply(this, args);
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                // Clonar response para ler body
+                const clonedResponse = response.clone();
+                let responseData = null;
+                
+                try {
+                    responseData = await clonedResponse.json();
+                } catch (e) {
+                    // Não é JSON, ignorar
+                }
+                
+                // Log resposta
+                logRequest('incoming', url, options, response, responseData, duration);
+                
+                return response;
+            } catch (error) {
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                logRequest('error', url, options, null, error, duration);
+                throw error;
+            }
+        };
+
+        function logRequest(type, url, options, response = null, data = null, duration = 0) {
+            requestCount++;
+            
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            const method = options?.method || 'GET';
+            const urlObj = typeof url === 'string' ? url : url.toString();
+            
+            let logClass = 'log-entry';
+            let statusClass = '';
+            let statusText = '';
+            
+            if (type === 'incoming') {
+                if (response.ok) {
+                    successCount++;
+                    statusClass = 'success';
+                    statusText = response.status;
+                } else {
+                    errorCount++;
+                    logClass += ' error';
+                    statusClass = 'error';
+                    statusText = response.status;
+                }
+                
+                // Detectar salvamento de mensagem
+                if (urlObj.includes('/add_message/') && response.ok) {
+                    messagesSaved++;
+                    updateStats();
+                }
+                
+                // Detectar problemas
+                detectProblems(urlObj, method, response, data, options);
+            } else if (type === 'error') {
+                errorCount++;
+                logClass += ' error';
+                statusClass = 'error';
+                statusText = 'FALHOU';
+            }
+            
+            updateStats();
+            
+            const logsContainer = document.getElementById('request-logs');
+            const logEntry = document.createElement('div');
+            logEntry.className = logClass;
+            
+            let html = `
+                <div>
+                    <span class="timestamp">${timestamp}</span>
+                    <span class="method ${method}">${method}</span>
+                    <span>${urlObj}</span>
+                    ${statusText ? `<span class="status ${statusClass}">${statusText}</span>` : ''}
+                    ${duration ? `<span style="color: #888; margin-left: 8px;">(${duration}ms)</span>` : ''}
+                </div>
+            `;
+            
+            if (type === 'outgoing' && options?.body) {
+                try {
+                    const body = JSON.parse(options.body);
+                    html += `<div class="json-view"><strong>📤 Request Body:</strong><pre>${JSON.stringify(body, null, 2)}</pre></div>`;
+                } catch (e) {}
+            }
+            
+            if (type === 'incoming' && data) {
+                html += `<div class="json-view"><strong>📥 Response:</strong><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+            }
+            
+            if (type === 'error') {
+                html += `<div class="json-view" style="background: #2a1a1a;"><strong>❌ Erro:</strong><pre>${data.toString()}</pre></div>`;
+            }
+            
+            logEntry.innerHTML = html;
+            logsContainer.insertBefore(logEntry, logsContainer.firstChild);
+            
+            // Limitar logs a 50
+            while (logsContainer.children.length > 50) {
+                logsContainer.removeChild(logsContainer.lastChild);
+            }
+            
+            document.getElementById('log-counter').textContent = `${requestCount} logs`;
+        }
+
+        function detectProblems(url, method, response, data, options) {
+            const problem = {
+                timestamp: new Date().toLocaleTimeString('pt-BR'),
+                url,
+                method,
+                status: response?.status,
+                description: ''
+            };
+            
+            let hasProblem = false;
+            
+            // Problema 1: Erro ao salvar mensagem
+            if (url.includes('/add_message/') && !response.ok) {
+                problem.description = `❌ FALHA AO SALVAR MENSAGEM - Status ${response.status}`;
+                hasProblem = true;
+            }
+            
+            // Problema 2: Token ausente
+            if (!options?.headers?.Authorization && url.includes('/api/')) {
+                problem.description = `🔑 REQUISIÇÃO SEM TOKEN DE AUTENTICAÇÃO`;
+                hasProblem = true;
+            }
+            
+            // Problema 3: Dados malformados
+            if (url.includes('/add_message/') && options?.body) {
+                try {
+                    const body = JSON.parse(options.body);
+                    if (!body.role || !body.content) {
+                        problem.description = `⚠️ DADOS INCOMPLETOS - role: ${!!body.role}, content: ${!!body.content}`;
+                        hasProblem = true;
+                    }
+                } catch (e) {}
+            }
+            
+            // Problema 4: Conversação inexistente
+            if (url.includes('/conversations/null/') || url.includes('/conversations/undefined/')) {
+                problem.description = `🚫 CONVERSAÇÃO INVÁLIDA (null/undefined)`;
+                hasProblem = true;
+            }
+            
+            // Problema 5: Erro 401 (não autenticado)
+            if (response?.status === 401) {
+                problem.description = `🔒 NÃO AUTENTICADO - Token expirado ou inválido`;
+                hasProblem = true;
+            }
+            
+            if (hasProblem) {
+                problems.push(problem);
+                displayProblem(problem);
+            }
+        }
+
+        function displayProblem(problem) {
+            const container = document.getElementById('problems-detected');
+            const problemDiv = document.createElement('div');
+            problemDiv.className = 'log-entry error';
+            problemDiv.innerHTML = `
+                <div>
+                    <span class="timestamp">${problem.timestamp}</span>
+                    <span class="method ${problem.method}">${problem.method}</span>
+                    <span>${problem.description}</span>
+                </div>
+                <div class="json-view">
+                    <strong>URL:</strong> ${problem.url}<br>
+                    <strong>Status:</strong> ${problem.status || 'N/A'}
+                </div>
+            `;
+            container.insertBefore(problemDiv, container.firstChild);
+            
+            document.getElementById('problem-counter').textContent = `${problems.length} problemas`;
+        }
+
+        function updateStats() {
+            document.getElementById('total-requests').textContent = requestCount;
+            document.getElementById('total-success').textContent = successCount;
+            document.getElementById('total-errors').textContent = errorCount;
+            document.getElementById('messages-saved').textContent = messagesSaved;
+        }
+
+        function clearLogs() {
+            if (confirm('Limpar todos os logs?')) {
+                requestCount = 0;
+                successCount = 0;
+                errorCount = 0;
+                messagesSaved = 0;
+                problems = [];
+                document.getElementById('request-logs').innerHTML = '';
+                document.getElementById('problems-detected').innerHTML = '<p style="color: #888;">Nenhum problema detectado ainda...</p>';
+                updateStats();
+                document.getElementById('log-counter').textContent = '0 logs';
+                document.getElementById('problem-counter').textContent = '0 problemas';
+            }
+        }
+
+        // Inicializar
+        updateStats();
+        document.getElementById('problems-detected').innerHTML = '<p style="color: #888;">Nenhum problema detectado ainda...</p>';
+        
+        console.log('🔍 Monitor de Requisições ATIVO - Todas as chamadas à API serão interceptadas');
+        console.log('📊 Abra esta página JUNTO com o chatbot para monitorar as requisições');
+    </script>
+</body>
+</html>

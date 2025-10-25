@@ -3,6 +3,11 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
 
+# Router para ViewSets
+router = DefaultRouter()
+router.register(r'conversations', views.AIConversationViewSet, basename='conversation')
+router.register(r'messages', views.AIMessageViewSet, basename='message')
+
 # URLs da API AI
 urlpatterns = [
     # Status do serviço
@@ -16,10 +21,10 @@ urlpatterns = [
     # Geração de texto
     path('generate/', views.TextGenerationView.as_view(), name='ai-generate'),
     
-    # Chat e conversas
+    # Chat e conversas (views antigas - manter por compatibilidade)
     path('chat/', views.ChatConversationView.as_view(), name='ai-chat'),
-    path('conversations/', views.ConversationListView.as_view(), name='ai-conversations'),
-    path('conversations/<int:pk>/', views.ConversationDetailView.as_view(), name='ai-conversation-detail'),
+    path('conversations/list/', views.ConversationListView.as_view(), name='ai-conversations-list'),
+    path('conversations/detail/<int:pk>/', views.ConversationDetailView.as_view(), name='ai-conversation-detail-old'),
     
     # Assistentes especializados
     path('agriculture/', views.AgricultureAssistantView.as_view(), name='ai-agriculture'),
@@ -28,4 +33,7 @@ urlpatterns = [
     # Feedback e estatísticas
     path('feedback/', views.AIFeedbackView.as_view(), name='ai-feedback'),
     path('usage/', views.UsageStatsView.as_view(), name='ai-usage-stats'),
+    
+    # Incluir rotas do router (ViewSets)
+    path('', include(router.urls)),
 ]

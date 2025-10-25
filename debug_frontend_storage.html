@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug - Verificar Estado do Frontend</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1e1e1e; color: #d4d4d4; }
+        .section { margin: 20px 0; padding: 15px; background: #2d2d2d; border-radius: 5px; }
+        .title { color: #4ec9b0; font-weight: bold; margin-bottom: 10px; }
+        .key { color: #9cdcfe; }
+        .value { color: #ce9178; }
+        .error { color: #f48771; }
+        .success { color: #4fc1ff; }
+        button { 
+            background: #0e639c; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border-radius: 3px; 
+            cursor: pointer; 
+        }
+        button:hover { background: #1177bb; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug - Estado do Frontend (AgroAlerta)</h1>
+    
+    <div class="section">
+        <div class="title">📦 localStorage (Todos os itens)</div>
+        <div id="localStorage-content"></div>
+        <button onclick="clearLocalStorage()">🗑️ Limpar localStorage</button>
+    </div>
+    
+    <div class="section">
+        <div class="title">🔑 Tokens de Autenticação</div>
+        <div id="tokens-content"></div>
+    </div>
+    
+    <div class="section">
+        <div class="title">💬 Conversas Armazenadas Localmente</div>
+        <div id="conversations-content"></div>
+    </div>
+    
+    <div class="section">
+        <div class="title">🌐 Teste de Conexão com Backend</div>
+        <div id="backend-test"></div>
+        <button onclick="testBackendConnection()">🔄 Testar Conexão</button>
+    </div>
+
+    <script>
+        // Função para exibir localStorage
+        function displayLocalStorage() {
+            const container = document.getElementById('localStorage-content');
+            const items = [];
+            
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                const value = localStorage.getItem(key);
+                items.push(`<div><span class="key">${key}:</span> <span class="value">${value.substring(0, 100)}${value.length > 100 ? '...' : ''}</span></div>`);
+            }
+            
+            if (items.length === 0) {
+                container.innerHTML = '<div class="error">❌ localStorage está vazio!</div>';
+            } else {
+                container.innerHTML = items.join('');
+            }
+        }
+        
+        // Função para exibir tokens
+        function displayTokens() {
+            const container = document.getElementById('tokens-content');
+            const accessToken = localStorage.getItem('access_token');
+            const refreshToken = localStorage.getItem('refresh_token');
+            const oldToken = localStorage.getItem('token');
+            
+            let html = '';
+            
+            if (accessToken) {
+                html += `<div class="success">✅ access_token: ${accessToken.substring(0, 50)}...</div>`;
+            } else {
+                html += '<div class="error">❌ access_token não encontrado!</div>';
+            }
+            
+            if (refreshToken) {
+                html += `<div class="success">✅ refresh_token: ${refreshToken.substring(0, 50)}...</div>`;
+            } else {
+                html += '<div class="error">❌ refresh_token não encontrado!</div>';
+            }
+            
+            if (oldToken) {
+                html += `<div class="error">⚠️ token antigo encontrado (deve ser removido): ${oldToken.substring(0, 50)}...</div>`;
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Função para exibir conversas
+        function displayConversations() {
+            const container = document.getElementById('conversations-content');
+            
+            // Verificar se há conversas no localStorage
+            const localConvs = localStorage.getItem('conversations');
+            const chatHistory = localStorage.getItem('chatHistory');
+            
+            let html = '';
+            
+            if (localConvs) {
+                try {
+                    const convs = JSON.parse(localConvs);
+                    html += `<div class="error">⚠️ Encontradas ${Array.isArray(convs) ? convs.length : 'N/A'} conversas em localStorage (NÃO DEVERIA ESTAR AQUI!)</div>`;
+                    html += `<pre>${JSON.stringify(convs, null, 2).substring(0, 500)}</pre>`;
+                } catch (e) {
+                    html += `<div class="error">❌ Erro ao parsear conversas: ${e.message}</div>`;
+                }
+            }
+            
+            if (chatHistory) {
+                try {
+                    const history = JSON.parse(chatHistory);
+                    html += `<div class="error">⚠️ Encontrado chatHistory em localStorage (NÃO DEVERIA ESTAR AQUI!)</div>`;
+                    html += `<pre>${JSON.stringify(history, null, 2).substring(0, 500)}</pre>`;
+                } catch (e) {
+                    html += `<div class="error">❌ Erro ao parsear chatHistory: ${e.message}</div>`;
+                }
+            }
+            
+            if (!localConvs && !chatHistory) {
+                html = '<div class="success">✅ Nenhuma conversa em localStorage (correto - deve estar no backend)</div>';
+            }
+            
+            container.innerHTML = html;
+        }
+        
+        // Função para testar conexão com backend
+        async function testBackendConnection() {
+            const container = document.getElementById('backend-test');
+            container.innerHTML = '<div>⏳ Testando conexão...</div>';
+            
+            const token = localStorage.getItem('access_token');
+            
+            if (!token) {
+                container.innerHTML = '<div class="error">❌ Sem token de autenticação! Faça login primeiro.</div>';
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/ai/conversations/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const convs = data.results || data;
+                    const count = Array.isArray(convs) ? convs.length : (data.count || 0);
+                    
+                    container.innerHTML = `
+                        <div class="success">✅ Conexão OK! Status: ${response.status}</div>
+                        <div class="success">📊 Conversas no backend: ${count}</div>
+                        <pre>${JSON.stringify(data, null, 2).substring(0, 1000)}</pre>
+                    `;
+                } else {
+                    const errorText = await response.text();
+                    container.innerHTML = `
+                        <div class="error">❌ Erro: ${response.status} ${response.statusText}</div>
+                        <pre>${errorText}</pre>
+                    `;
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">❌ Erro de conexão: ${error.message}</div>`;
+            }
+        }
+        
+        // Função para limpar localStorage
+        function clearLocalStorage() {
+            if (confirm('⚠️ Tem certeza que deseja limpar TODO o localStorage? Você perderá os tokens e precisará fazer login novamente.')) {
+                localStorage.clear();
+                alert('✅ localStorage limpo! Recarregue a página.');
+                location.reload();
+            }
+        }
+        
+        // Inicializar
+        displayLocalStorage();
+        displayTokens();
+        displayConversations();
+    </script>
+</body>
+</html>

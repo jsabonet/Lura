@@ -55,43 +55,23 @@ export default function ChatbotPage() {
       router.push('/login');
       return;
     }
+    
+    console.log('🎬 [INIT] Componente montado, carregando conversas...');
+    // Carregar conversas do backend ao invés de localStorage
+    loadConversationsFromBackend();
+    
     // Open sidebar by default on desktop widths
     if (typeof window !== 'undefined' && window.innerWidth >= 768) {
       setSidebarOpen(true);
     }
-    const saved = localStorage.getItem('agroalerta_conversations');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const hydrated = parsed.map((c: any) => ({
-        ...c,
-        createdAt: new Date(c.createdAt),
-        updatedAt: new Date(c.updatedAt),
-        messages: c.messages.map((m: any) => ({
-          ...m,
-          timestamp: m.timestamp ? new Date(m.timestamp) : undefined
-        }))
-      }));
-      setConversations(hydrated);
-      
-      // Load last active conversation
-      if (hydrated.length > 0) {
-        const lastId = localStorage.getItem('agroalerta_active_conversation');
-        const activeConv = hydrated.find((c: Conversation) => c.id === lastId) || hydrated[0];
-        setActiveConversationId(activeConv.id);
-        setMessages(activeConv.messages);
-      }
-    } else {
-      // Create initial conversation
-      createNewConversation();
-    }
   }, [authLoading, isAuthenticated, router]);
 
-  // Save conversations to localStorage whenever they change
-  useEffect(() => {
-    if (conversations.length > 0) {
-      localStorage.setItem('agroalerta_conversations', JSON.stringify(conversations));
-    }
-  }, [conversations]);
+  // REMOVIDO: Não salvar mais no localStorage - agora tudo vem do backend
+  // useEffect(() => {
+  //   if (conversations.length > 0) {
+  //     localStorage.setItem('agroalerta_conversations', JSON.stringify(conversations));
+  //   }
+  // }, [conversations]);
 
   // Save active conversation ID
   useEffect(() => {
@@ -127,6 +107,277 @@ export default function ChatbotPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // ========== FUNÇÕES DE SINCRONIZAÇÃO COM BACKEND ==========
+  
+  /**
+   * Garante que exista uma conversa ativa válida no backend.
+   * Se o ID atual for local (ex: 'conv_...') ou inexistente, cria uma nova no backend.
+   * Retorna o ID (string) da conversa válida no backend.
+   */
+  const ensureBackendConversation = async (): Promise<string | null> => {
+    // Se já temos uma conversa ativa e ela parece numérica, considera válida
+    if (activeConversationId && /^\d+$/.test(activeConversationId)) {
+      return activeConversationId;
+    }
+
+    // Tentar encontrar alguma conversa carregada do backend
+    const backendConv = conversations.find(c => /^\d+$/.test(c.id));
+    if (backendConv) {
+      setActiveConversationId(backendConv.id);
+      setMessages(backendConv.messages);
+      return backendConv.id;
+    }
+
+    // Criar nova no backend
+    await createNewConversationInBackend();
+    // Após criar, o estado é atualizado; aguardar o próximo tick e retornar o novo ID
+    return new Promise(resolve => {
+      setTimeout(() => {
+        const created = conversations.find(c => /^\d+$/.test(c.id));
+        resolve(created ? created.id : null);
+      }, 50);
+    });
+  };
+  
+  /**
+   * Carrega conversas do backend
+   */
+  const loadConversationsFromBackend = async () => {
+    console.log('🔄 [LOAD] Iniciando carregamento de conversas...');
+    try {
+  const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.warn('⚠️  [LOAD] Sem token, pulando carregamento do backend');
+        return;
+      }
+
+      console.log('📡 [LOAD] Fazendo requisição GET /ai/conversations/');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/conversations/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log(`📊 [LOAD] Status: ${response.status}`);
+
+      if (!response.ok) {
+        throw new Error(`Erro ao carregar conversas: ${response.status}`);
+      }
+
+      const responseData = await response.json();
+      console.log(`📊 [LOAD] Tipo de resposta:`, typeof responseData, Array.isArray(responseData));
+      
+      // Backend retorna formato paginado: { count, results }
+      let backendConversations = responseData;
+      if (responseData && typeof responseData === 'object' && 'results' in responseData) {
+        backendConversations = responseData.results;
+        console.log(`📊 [LOAD] Resposta paginada detectada. Total: ${responseData.count}`);
+      }
+      
+      console.log(`✅ [LOAD] Recebidas ${backendConversations.length} conversas do backend`);
+      
+      // Converter formato backend para formato frontend
+      const formattedConversations: Conversation[] = backendConversations.map((conv: any) => ({
+        id: conv.id.toString(),
+        title: conv.title || 'Nova Conversa',
+        messages: conv.messages?.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role,
+          content: msg.content,
+          content_html: msg.metadata?.content_html,
+          timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+        })) || [],
+        createdAt: new Date(conv.created_at),
+        updatedAt: new Date(conv.updated_at)
+      }));
+
+      console.log(`💾 [LOAD] Conversas formatadas:`, formattedConversations.map(c => ({id: c.id, title: c.title, msgs: c.messages.length})));
+      setConversations(formattedConversations);
+      
+      // Carregar última conversa ativa ou criar nova
+      if (formattedConversations.length > 0) {
+        const lastId = localStorage.getItem('agroalerta_active_conversation');
+        const activeConv = formattedConversations.find(c => c.id === lastId) || formattedConversations[0];
+        console.log(`🎯 [LOAD] Ativando conversa: ${activeConv.id}`);
+        setActiveConversationId(activeConv.id);
+        setMessages(activeConv.messages);
+      } else {
+        // Se não houver conversas, criar uma nova
+        console.log('➕ [LOAD] Nenhuma conversa existente, criando nova...');
+        await createNewConversationInBackend();
+      }
+    } catch (error) {
+      console.error('❌ [LOAD] Erro ao carregar conversas:', error);
+      // Fallback: criar nova conversa local
+      createNewConversationLocal();
+    }
+  };
+
+  /**
+   * Cria nova conversa no backend
+   */
+  const createNewConversationInBackend = async () => {
+    console.log('➕ [CREATE] Criando nova conversa...');
+    try {
+  const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.warn('⚠️  [CREATE] Sem token, criando conversa local');
+        // Criar conversa local sem backend
+        createNewConversationLocal();
+        return;
+      }
+
+      console.log('📡 [CREATE] POST /ai/conversations/');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/conversations/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: 'Nova Conversa',
+          conversation_type: 'general'
+        })
+      });
+
+      console.log(`📊 [CREATE] Status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ [CREATE] Erro: ${response.status} - ${errorText}`);
+        throw new Error('Erro ao criar conversa');
+      }
+
+      const newConv = await response.json();
+      console.log(`✅ [CREATE] Conversa criada: ID ${newConv.id}`);
+      
+      const formattedConv: Conversation = {
+        id: newConv.id.toString(),
+        title: newConv.title,
+        messages: [],
+        createdAt: new Date(newConv.created_at),
+        updatedAt: new Date(newConv.updated_at)
+      };
+
+      setConversations(prev => [formattedConv, ...prev]);
+      setActiveConversationId(formattedConv.id);
+      setMessages([]);
+      setInputValue('');
+      setUploadedImage(null);
+      setImagePreview(null);
+    } catch (error) {
+      console.error('❌ [CREATE] Erro ao criar conversa no backend:', error);
+      // Fallback: criar conversa local
+      createNewConversationLocal();
+    }
+  };
+
+  /**
+   * Cria nova conversa localmente (fallback quando backend não está disponível)
+   */
+  const createNewConversationLocal = () => {
+    const newConv: Conversation = {
+      id: `conv_${Date.now()}`,
+      title: 'Nova Conversa',
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    
+    setConversations(prev => [newConv, ...prev]);
+    setActiveConversationId(newConv.id);
+    setMessages([]);
+    setInputValue('');
+    setUploadedImage(null);
+    setImagePreview(null);
+  };
+
+  /**
+   * Salva mensagem no backend
+   */
+  const saveMessageToBackend = async (conversationId: string, role: string, content: string, contentHtml?: string) => {
+    console.log(`💾 [SAVE] Salvando mensagem ${role} na conversa ${conversationId}...`);
+    console.log(`📝 [SAVE] Conteúdo: ${content.substring(0, 50)}...`);
+    try {
+  const token = localStorage.getItem('access_token');
+      if (!token) {
+        console.warn('⚠️  [SAVE] Sem token, não salvando no backend');
+        return null;
+      }
+
+      console.log(`📡 [SAVE] POST /ai/conversations/${conversationId}/add_message/`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/conversations/${conversationId}/add_message/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          role,
+          content,
+          metadata: contentHtml ? { content_html: contentHtml } : {}
+        })
+      });
+
+      console.log(`📊 [SAVE] Status: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ [SAVE] Erro: ${response.status} - ${errorText}`);
+        throw new Error('Erro ao salvar mensagem');
+      }
+
+      const savedMessage = await response.json();
+      console.log(`✅ [SAVE] Mensagem salva: ID ${savedMessage.id}`);
+      return savedMessage.id; // Retorna o ID da mensagem salva
+    } catch (error) {
+      console.error('❌ [SAVE] Erro ao salvar mensagem no backend:', error);
+      return null;
+    }
+  };
+
+  /**
+   * Deleta conversa no backend
+   */
+  const deleteConversationFromBackend = async (conversationId: string) => {
+    try {
+  const token = localStorage.getItem('access_token');
+      if (!token) return;
+
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/conversations/${conversationId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+    } catch (error) {
+      console.error('Erro ao deletar conversa no backend:', error);
+    }
+  };
+
+  /**
+   * Atualiza título da conversa no backend
+   */
+  const updateConversationTitle = async (conversationId: string, title: string) => {
+    try {
+  const token = localStorage.getItem('access_token');
+      if (!token) return;
+
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/conversations/${conversationId}/`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ title })
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar título:', error);
+    }
+  };
+
+  // ========== FIM FUNÇÕES DE SINCRONIZAÇÃO ==========
+
   // Funções de edição de mensagens
   const handleEditMessage = (index: number, content: string) => {
     setEditingMessageIndex(index);
@@ -155,10 +406,10 @@ export default function ChatbotPage() {
     // Se tiver conversa ativa, salvar no backend (somente se a mensagem tiver um id)
     if (activeConversation) {
       try {
-        const token = localStorage.getItem('token');
+  const token = localStorage.getItem('access_token');
         const messageId = (updatedMessages[index] as any)?.id;
         if (messageId) {
-          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/conversations/${activeConversation.id}/messages/${messageId}/`, {
+          await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/messages/${messageId}/`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',
@@ -214,23 +465,15 @@ export default function ChatbotPage() {
   };
 
   const createNewConversation = () => {
-    const newConv: Conversation = {
-      id: `conv_${Date.now()}`,
-      title: 'Nova Conversa',
-      messages: [],
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    
-    setConversations(prev => [newConv, ...prev]);
-    setActiveConversationId(newConv.id);
-    setMessages([]);
-    setInputValue('');
-    setUploadedImage(null);
-    setImagePreview(null);
+    // Tentar criar no backend primeiro
+    createNewConversationInBackend();
   };
 
-  const deleteConversation = (convId: string) => {
+  const deleteConversation = async (convId: string) => {
+    // Deletar do backend
+    await deleteConversationFromBackend(convId);
+    
+    // Deletar do estado local
     setConversations(prev => prev.filter(c => c.id !== convId));
     if (activeConversationId === convId) {
       const remaining = conversations.filter(c => c.id !== convId);
@@ -297,6 +540,24 @@ export default function ChatbotPage() {
     setIsLoading(true);
     setError(null);
 
+  // Garante conversa válida no backend antes de salvar
+  const ensuredConversationId = await ensureBackendConversation();
+  console.log(`🚀 [SUBMIT] Enviando mensagem na conversa ${ensuredConversationId || activeConversationId}`);
+    
+    // Salvar mensagem do usuário no backend
+    if (ensuredConversationId) {
+      console.log(`💾 [SUBMIT] Salvando mensagem do usuário...`);
+      const savedMessageId = await saveMessageToBackend(ensuredConversationId, 'user', trimmedInput);
+      if (savedMessageId) {
+        console.log(`✅ [SUBMIT] Mensagem do usuário salva com ID ${savedMessageId}`);
+        userMessage.id = savedMessageId;
+      } else {
+        console.warn('⚠️  [SUBMIT] Falha ao salvar mensagem do usuário');
+      }
+    } else {
+      console.warn('⚠️  [SUBMIT] Nenhuma conversa ativa para salvar mensagem');
+    }
+
     // Adicionar mensagem placeholder da IA
     const aiMessageIndex = newMessages.length;
     const aiPlaceholder: ChatMessage = {
@@ -309,13 +570,15 @@ export default function ChatbotPage() {
 
     try {
       // Preparar mensagens para o chat
-      const historyForChat = newMessages.slice(-12).map(m => ({ 
+      // IMPORTANTE: Enviar histórico COMPLETO incluindo a mensagem atual do usuário
+      // O backend espera receber o histórico completo com todas as mensagens
+      const historyForChat = newMessages.map(m => ({ 
         role: m.role, 
         content: m.content 
       }));
 
       // Fazer requisição SSE
-      const token = localStorage.getItem('token');
+  const token = localStorage.getItem('access_token');
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/proxy/chat/stream/`, {
         method: 'POST',
         headers: {
@@ -324,7 +587,9 @@ export default function ChatbotPage() {
         },
         body: JSON.stringify({
           messages: historyForChat
-        })
+        }),
+        // IMPORTANTE: Não definir timeout muito curto para streams longos
+        signal: AbortSignal.timeout(120000) // 120 segundos (2 minutos)
       });
 
       if (!response.ok) {
@@ -337,11 +602,15 @@ export default function ChatbotPage() {
       let accumulatedText = '';
       let finalHtml = '';
       let isDone = false;
+      let streamSuccessful = false;
 
       if (reader) {
         while (!isDone) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            console.log('📡 [STREAM] Reader done');
+            break;
+          }
 
           // Decodificar chunk
           const chunk = decoder.decode(value, { stream: true });
@@ -369,8 +638,15 @@ export default function ChatbotPage() {
                   });
                 } else if (parsed.type === 'done') {
                   isDone = true;
-                  accumulatedText = parsed.total_text || accumulatedText;
+                  streamSuccessful = true;
+                  // Usar total_text se disponível, caso contrário manter o acumulado
+                  if (parsed.total_text && parsed.total_text.length > 0) {
+                    accumulatedText = parsed.total_text;
+                  }
                   finalHtml = parsed.content_html || '';
+                  
+                  console.log(`✅ [STREAM] Completado: ${accumulatedText.length} caracteres`);
+                  console.log(`📝 [STREAM] HTML: ${finalHtml.length} caracteres`);
                   
                   // Atualizar mensagem final
                   setMessages(prev => {
@@ -386,29 +662,57 @@ export default function ChatbotPage() {
                   throw new Error(parsed.error || 'Erro no streaming');
                 }
               } catch (parseError) {
-                console.error('Erro ao parsear SSE:', parseError);
+                console.error('❌ [STREAM] Erro ao parsear SSE:', parseError, 'Line:', line);
               }
             }
           }
         }
       }
 
+      // Salvar apenas se o stream foi completado com sucesso
+      if (!streamSuccessful) {
+        throw new Error('Stream incompleto ou não recebeu sinal de done');
+      }
+
       // Atualizar conversa
-      if (activeConversationId) {
+      if (ensuredConversationId) {
+        const aiMessage: ChatMessage = {
+          role: 'assistant',
+          content: accumulatedText,
+          content_html: finalHtml,
+          timestamp: new Date()
+        };
+
+        console.log(`💾 [SUBMIT] Salvando resposta da IA (${accumulatedText.length} caracteres)...`);
+        // Salvar mensagem da IA no backend
+        const savedAiMessageId = await saveMessageToBackend(
+          ensuredConversationId, 
+          'assistant', 
+          accumulatedText, 
+          finalHtml
+        );
+        if (savedAiMessageId) {
+          console.log(`✅ [SUBMIT] Resposta da IA salva com ID ${savedAiMessageId}`);
+          aiMessage.id = savedAiMessageId;
+        } else {
+          console.warn('⚠️  [SUBMIT] Falha ao salvar resposta da IA');
+        }
+
         setConversations(prev => prev.map(c => {
-          if (c.id === activeConversationId) {
+          if (c.id === ensuredConversationId) {
             const title = c.title === 'Nova Conversa' && trimmedInput 
               ? trimmedInput.slice(0, 50) + (trimmedInput.length > 50 ? '...' : '')
               : c.title;
+            
+            // Atualizar título no backend se mudou
+            if (title !== c.title) {
+              updateConversationTitle(ensuredConversationId, title);
+            }
+
             return {
               ...c,
               title,
-              messages: [...newMessages, {
-                role: 'assistant',
-                content: accumulatedText,
-                content_html: finalHtml,
-                timestamp: new Date()
-              }],
+              messages: [...newMessages, aiMessage],
               updatedAt: new Date()
             };
           }
@@ -501,6 +805,24 @@ export default function ChatbotPage() {
 
         const updatedMessages = [...newMessages, aiMessage];
         setMessages(updatedMessages);
+        
+        // Salvar resposta regenerada da IA no backend também
+        try {
+          const ensuredConversationId = await ensureBackendConversation();
+          if (ensuredConversationId) {
+            const savedAiMessageId = await saveMessageToBackend(
+              ensuredConversationId,
+              'assistant',
+              aiMessage.content || '',
+              aiMessage.content_html
+            );
+            if (savedAiMessageId) {
+              aiMessage.id = savedAiMessageId;
+            }
+          }
+        } catch (e) {
+          console.warn('⚠️  Falha ao salvar resposta regenerada no backend', e);
+        }
         
         // Ativar streaming para a última mensagem
         setStreamingMessageIndex(updatedMessages.length - 1);
@@ -889,7 +1211,7 @@ export default function ChatbotPage() {
                     ].map((item, idx) => (
                       <button
                         key={idx}
-                        onClick={() => handleSubmit(null, item.prompt)}
+                        onClick={() => handleSubmitWithStreaming(null, item.prompt)}
                         className={`p-4 bg-gradient-to-br ${item.color} rounded-2xl transition-all border border-gray-200 shadow-sm active:scale-95 cursor-pointer`}
                       >
                         <div className="text-3xl md:text-4xl mb-2">{item.icon}</div>
@@ -911,7 +1233,7 @@ export default function ChatbotPage() {
                       ].map((example, idx) => (
                         <button
                           key={idx}
-                          onClick={() => handleSubmit(null, example)}
+                          onClick={() => handleSubmitWithStreaming(null, example)}
                           className="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm text-gray-700 hover:border-green-500 hover:bg-green-50 hover:text-green-700 transition-all active:scale-95 shadow-sm"
                         >
                           {example}
@@ -1161,7 +1483,7 @@ export default function ChatbotPage() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      handleSubmit(e);
+                      handleSubmitWithStreaming(e);
                     }
                   }}
                   placeholder="Mensagem para Lura..."

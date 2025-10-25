@@ -219,16 +219,27 @@ class AIChatStreamView(APIView):
         
         # Construir contexto do chat
         prompt_parts = []
-        for msg in messages[:-1]:  # Todas menos a última
+
+        # Injetar contexto do sistema com informações do criador
+        system_context = (
+            "Você é a Lura, assistente IA da plataforma LuraFarm, criada por Joel Lasmim, programador fullstack "
+            "e estudante de Engenharia Agronômica e Desenvolvimento Rural. Joel é apaixonado por "
+            "agricultura e programação e construiu esta plataforma para apoiar agricultores, unindo "
+            "tecnologia e agronomia em uma solução inovadora. Sua missão é integrar o conhecimento "
+            "digital com as práticas agrícolas, trazendo inovação e eficiência ao setor. Responda de forma "
+            "clara, prática e útil para agricultores, e quando apropriado considere o contexto de Moçambique. "
+            "Seja completa e detalhada nas respostas, não deixe frases incompletas."
+        )
+        prompt_parts.append(f"Sistema: {system_context}")
+        
+        # Adicionar TODAS as mensagens ao prompt (incluindo a última)
+        for msg in messages:
             role = "Assistente" if msg['role'] == 'assistant' else "Usuário"
             prompt_parts.append(f"{role}: {msg['content']}")
         
-        # Adicionar a última mensagem (atual)
-        last_message = messages[-1]['content']
-        if prompt_parts:
-            full_prompt = "\n\n".join(prompt_parts) + f"\n\nUsuário: {last_message}\n\nAssistente:"
-        else:
-            full_prompt = last_message
+        # Adicionar prompt final para a IA responder
+        prompt_parts.append("Assistente:")
+        full_prompt = "\n\n".join(prompt_parts)
         
         # Função geradora para o streaming
         async def event_stream():
@@ -737,3 +748,94 @@ class UsageStatsView(APIView):
             'total': total_stats,
             'daily': daily_stats
         })
+
+
+# ========== ViewSets para CRUD de Conversas e Mensagens ==========
+
+from rest_framework import viewsets
+from rest_framework.decorators import action
+
+class AIConversationViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para CRUD completo de conversas
+    """
+    serializer_class = AIConversationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        return AIConversation.objects.filter(
+            user=self.request.user,
+            is_active=True
+        ).prefetch_related('messages').order_by('-updated_at')
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+    
+    def perform_destroy(self, instance):
+        # Soft delete
+        instance.is_active = False
+        instance.save()
+    
+    @action(detail=True, methods=['post'])
+    def add_message(self, request, pk=None):
+        """
+        Adiciona uma mensagem a uma conversa
+        POST /api/ai/conversations/{id}/add_message/
+        Body: { "role": "user|assistant", "content": "...", "metadata": {...} }
+        """
+        conversation = self.get_object()
+        
+        role = request.data.get('role')
+        content = request.data.get('content')
+        metadata = request.data.get('metadata', {})
+        
+        if not role or not content:
+            return Response(
+                {'error': 'role e content são obrigatórios'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        message = AIMessage.objects.create(
+            conversation=conversation,
+            role=role,
+            content=content,
+            metadata=metadata
+        )
+        
+        # Atualizar updated_at da conversa
+        conversation.updated_at = timezone.now()
+        conversation.save(update_fields=['updated_at'])
+        
+        serializer = AIMessageSerializer(message)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AIMessageViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para CRUD de mensagens individuais
+    """
+    serializer_class = AIMessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # Filtra mensagens apenas de conversas do usuário
+        return AIMessage.objects.filter(
+            conversation__user=self.request.user
+        ).select_related('conversation')
+    
+    def perform_create(self, serializer):
+        # Verifica se a conversa pertence ao usuário
+        conversation_id = self.request.data.get('conversation_id')
+        try:
+            conversation = AIConversation.objects.get(
+                id=conversation_id,
+                user=self.request.user
+            )
+            serializer.save(conversation=conversation)
+            
+            # Atualizar updated_at da conversa
+            conversation.updated_at = timezone.now()
+            conversation.save(update_fields=['updated_at'])
+        except AIConversation.DoesNotExist:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError({'conversation_id': 'Conversa não encontrada'})

@@ -22,7 +22,7 @@ export function StreamingMessage({
   isNewMessage = false,
   onStreamComplete,
   className = '',
-  baseSpeed = 8, // 8ms por caractere = resposta instantânea
+  baseSpeed = 1, // 1ms por caractere = resposta instantânea
 }: StreamingMessageProps) {
   // Para HTML, fazer streaming de forma mais inteligente (não quebrar tags)
   const textToStream = contentHtml || content;

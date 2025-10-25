@@ -18,6 +18,7 @@ export interface AIResponse {
 }
 
 export interface ChatMessage {
+  id?: number; // ID da mensagem no backend (opcional para novas mensagens)
   role: 'user' | 'assistant' | 'system';
   content: string;
   content_html?: string;
