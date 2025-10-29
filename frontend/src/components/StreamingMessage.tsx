@@ -52,7 +52,7 @@ export function StreamingMessage({
         <div dangerouslySetInnerHTML={{ __html: displayedText }} />
         {isStreaming && (
           <span 
-            className="inline-block w-0.5 h-5 bg-green-600 ml-1 animate-typing-cursor align-middle"
+            className="inline-block w-0.5 h-5 bg-[#F2C94C] ml-1 animate-typing-cursor align-middle shadow-lg shadow-[#F2C94C]/50"
             style={{ animation: 'blink 1s step-end infinite' }}
           />
         )}
@@ -70,7 +70,7 @@ export function StreamingMessage({
       {displayedText}
       {isStreaming && (
         <span 
-          className="inline-block w-0.5 h-5 bg-green-600 ml-1 animate-typing-cursor align-middle"
+          className="inline-block w-0.5 h-5 bg-[#F2C94C] ml-1 animate-typing-cursor align-middle shadow-lg shadow-[#F2C94C]/50"
           style={{ animation: 'blink 1s step-end infinite' }}
         />
       )}

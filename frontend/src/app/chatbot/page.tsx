@@ -567,15 +567,27 @@ export default function ChatbotPage() {
       timestamp: new Date()
     };
     setMessages([...newMessages, aiPlaceholder]);
+    // Marcar esta mensagem como a que está em streaming
+    setStreamingMessageIndex(aiMessageIndex);
 
     try {
       // Preparar mensagens para o chat
       // IMPORTANTE: Enviar histórico COMPLETO incluindo a mensagem atual do usuário
       // O backend espera receber o histórico completo com todas as mensagens
-      const historyForChat = newMessages.map(m => ({ 
-        role: m.role, 
-        content: m.content 
-      }));
+      // IMPORTANTE: Filtrar mensagens vazias (placeholder) antes de enviar
+      // e respeitar o limite de 8000 caracteres do backend por mensagem
+      const MAX_HISTORY_MESSAGES = 12; // limitar o contexto enviado
+      const MAX_MESSAGE_LENGTH = 7900; // margem de segurança abaixo de 8000
+
+      const historyForChat = newMessages
+        .filter(m => m.content && m.content.trim().length > 0) // Remove placeholders vazios
+        .slice(-MAX_HISTORY_MESSAGES)
+        .map(m => ({ 
+          role: m.role, 
+          content: m.content.length > MAX_MESSAGE_LENGTH 
+            ? m.content.slice(0, MAX_MESSAGE_LENGTH) 
+            : m.content 
+        }));
 
       // Fazer requisição SSE
   const token = localStorage.getItem('access_token');
@@ -593,7 +605,12 @@ export default function ChatbotPage() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errorDetails = '';
+        try {
+          errorDetails = await response.text();
+        } catch {}
+        console.error('❌ [STREAM] HTTP error', response.status, errorDetails);
+        throw new Error(`HTTP error! status: ${response.status}${errorDetails ? ' - ' + errorDetails : ''}`);
       }
 
       // Ler stream SSE
@@ -658,6 +675,8 @@ export default function ChatbotPage() {
                     };
                     return updated;
                   });
+                  // Assegurar que o indicador de "3 pontinhos" desapareça imediatamente ao concluir
+                  setIsLoading(false);
                 } else if (parsed.type === 'error') {
                   throw new Error(parsed.error || 'Erro no streaming');
                 }
@@ -725,6 +744,8 @@ export default function ChatbotPage() {
       setError(err.message || 'Erro ao processar resposta');
       // Remover placeholder em caso de erro
       setMessages(newMessages);
+      // Garantir que estado de streaming é limpo em caso de erro
+      setStreamingMessageIndex(null);
     } finally {
       setIsLoading(false);
     }
@@ -1004,11 +1025,21 @@ export default function ChatbotPage() {
   const activeConversation = conversations.find(c => c.id === activeConversationId);
 
   return (
-    <div className="flex h-screen bg-white md:bg-gradient-to-br md:from-gray-50 md:via-white md:to-green-50/30 overflow-hidden relative">
-      {/* Mobile Backdrop - Only blocks area behind sidebar */}
+    <div className="flex h-screen bg-gradient-to-br from-[#0F2027] via-[#1B2735] to-[#0F2027] overflow-hidden relative">
+      {/* Animated Background Pattern */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 20% 30%, #00A86B 1px, transparent 1px),
+                           radial-gradient(circle at 80% 70%, #3BB273 1px, transparent 1px)`,
+          backgroundSize: '50px 50px',
+          animation: 'float 20s ease-in-out infinite'
+        }}></div>
+      </div>
+      
+      {/* Mobile Backdrop */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -1017,30 +1048,33 @@ export default function ChatbotPage() {
       <aside 
         className={`
           fixed md:relative inset-y-0 left-0 z-50 md:z-auto
-          transition-all duration-300 ease-in-out
-          bg-gray-950 text-white flex flex-col overflow-hidden 
-          border-r border-gray-800 shadow-2xl md:shadow-none
+          transition-all duration-500 ease-in-out
+          bg-gradient-to-b from-[#0F2027] to-[#1B2735] text-white flex flex-col overflow-hidden 
+          border-r border-[#00A86B]/20 shadow-2xl backdrop-blur-xl
           ${sidebarOpen ? 'translate-x-0 w-80 md:w-64' : '-translate-x-full md:translate-x-0 md:w-0'}
         `}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        <div className="p-3 md:p-4 border-b border-gray-800/50">
+        <div className="p-3 md:p-4 border-b border-[#00A86B]/10">
           <div className="flex items-center justify-between mb-3 md:mb-4">
-            <div className="flex items-center gap-2">
-              <Image
-                src="/logo.png"
-                alt="LuraFarm Logo"
-                width={24}
-                height={24}
-                className="w-6 h-6 md:w-5 md:h-5"
-              />
-              <span className="font-bold text-white text-base md:text-sm">LuraFarm</span>
+            <div className="flex items-center gap-2 group">
+              <div className="relative">
+                <Image
+                  src="/logo.png"
+                  alt="LuraFarm Logo"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 md:w-5 md:h-5 transition-transform duration-300 group-hover:scale-110"
+                />
+                <div className="absolute -inset-1 bg-[#00A86B]/20 rounded-full blur-md group-hover:bg-[#00A86B]/40 transition-all duration-300"></div>
+              </div>
+              <span className="font-bold text-white text-base md:text-sm tracking-wide">LuraFarm</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="md:hidden p-2 hover:bg-gray-800 rounded-lg transition-colors"
+              className="md:hidden p-2 hover:bg-[#00A86B]/20 rounded-xl transition-all duration-300 hover:rotate-90"
             >
               <X className="w-5 h-5" />
             </button>
@@ -1048,38 +1082,40 @@ export default function ChatbotPage() {
           
           <button
             onClick={createNewConversation}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 md:py-2.5 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl transition-all shadow-lg hover:shadow-xl active:scale-95"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 md:py-2.5 bg-gradient-to-r from-[#00A86B] to-[#3BB273] hover:from-[#3BB273] hover:to-[#00A86B] rounded-2xl transition-all duration-500 shadow-lg shadow-[#00A86B]/30 hover:shadow-xl hover:shadow-[#00A86B]/50 active:scale-95 relative overflow-hidden group"
           >
-            <Plus className="w-5 h-5 md:w-4 md:h-4" />
-            <span className="font-medium text-base md:text-sm">Nova Conversa</span>
+            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+            <Plus className="w-5 h-5 md:w-4 md:h-4 relative z-10 group-hover:rotate-180 transition-transform duration-500" />
+            <span className="font-semibold text-base md:text-sm relative z-10">Nova Conversa</span>
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent overscroll-contain">
-          <div className="text-xs font-semibold text-gray-400 px-3 py-2 mb-1 md:text-[11px]">Histórico</div>
+        <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-[#00A86B]/30 scrollbar-track-transparent overscroll-contain">
+          <div className="text-xs font-semibold text-[#C2B280] px-3 py-2 mb-1 md:text-[11px] uppercase tracking-wider">Histórico</div>
           {conversations.map(conv => (
             <div
               key={conv.id}
               onClick={() => {
                 switchConversation(conv.id);
-                // Auto-close sidebar on mobile after selection
                 if (window.innerWidth < 768) {
                   setSidebarOpen(false);
                 }
               }}
-              className={`w-full text-left px-3 py-3 md:py-2.5 rounded-xl mb-1.5 md:mb-1 transition-all group relative overflow-hidden active:scale-95 cursor-pointer ${
+              className={`w-full text-left px-3 py-3 md:py-2.5 rounded-2xl mb-1.5 md:mb-1 transition-all duration-300 group relative overflow-hidden active:scale-95 cursor-pointer ${
                 conv.id === activeConversationId
-                  ? 'bg-gradient-to-r from-gray-800 to-gray-800/80 text-white shadow-md'
-                  : 'hover:bg-gray-900/50 text-gray-300 hover:text-white active:bg-gray-900/70'
+                  ? 'bg-gradient-to-r from-[#00A86B]/30 to-[#3BB273]/20 text-white shadow-lg shadow-[#00A86B]/20 border border-[#00A86B]/30'
+                  : 'hover:bg-[#00A86B]/10 text-gray-300 hover:text-white active:bg-[#00A86B]/20 border border-transparent hover:border-[#00A86B]/20'
               }`}
             >
               <div className="flex items-start justify-between gap-2 relative z-10">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <MessageSquare className="w-4 h-4 md:w-3.5 md:h-3.5 flex-shrink-0 text-green-500" />
+                    <MessageSquare className={`w-4 h-4 md:w-3.5 md:h-3.5 flex-shrink-0 transition-colors duration-300 ${
+                      conv.id === activeConversationId ? 'text-[#F2C94C]' : 'text-[#00A86B]'
+                    }`} />
                     <span className="text-sm md:text-[13px] font-medium truncate">{conv.title}</span>
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-[#C2B280]/70">
                     {formatTime(conv.updatedAt)}
                   </div>
                 </div>
@@ -1088,22 +1124,22 @@ export default function ChatbotPage() {
                     e.stopPropagation();
                     deleteConversation(conv.id);
                   }}
-                  className="opacity-100 md:opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-lg transition-all active:scale-90"
+                  className="opacity-100 md:opacity-0 group-hover:opacity-100 p-1.5 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all duration-300 active:scale-90"
                   title="Eliminar conversa"
                 >
                   <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
                 </button>
               </div>
               {conv.id === activeConversationId && (
-                <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00A86B]/20 to-transparent pointer-events-none animate-pulse"></div>
               )}
             </div>
           ))}
         </div>
 
-        <div className="p-3 md:p-4 border-t border-gray-800/50 text-xs text-gray-500">
+        <div className="p-3 md:p-4 border-t border-[#00A86B]/10 text-xs text-[#C2B280]/70 bg-gradient-to-b from-transparent to-[#0F2027]/50">
           <div className="flex items-center gap-2 mb-2">
-            <div className="w-9 h-9 md:w-8 md:h-8 bg-white rounded-lg flex items-center justify-center p-1">
+            <div className="w-9 h-9 md:w-8 md:h-8 bg-gradient-to-br from-[#00A86B] to-[#3BB273] rounded-2xl flex items-center justify-center p-1.5 shadow-lg shadow-[#00A86B]/30">
               <Image
                 src="/logo.png"
                 alt="LuraFarm Logo"
@@ -1113,46 +1149,40 @@ export default function ChatbotPage() {
               />
             </div>
             <div>
-              <p className="font-medium text-gray-400 text-sm md:text-xs">LuraFarm</p>
-              <p className="text-gray-600 text-xs md:text-[11px]">Assistente Lura</p>
+              <p className="font-semibold text-white text-sm md:text-xs">LuraFarm</p>
+              <p className="text-[#C2B280]/70 text-xs md:text-[11px]">Assistente Lura</p>
             </div>
           </div>
-          <p className="text-gray-600 text-[11px] md:text-[10px]">© 2025 Todos os direitos reservados</p>
+          <p className="text-[#C2B280]/50 text-[11px] md:text-[10px]">© 2025 Todos os direitos reservados</p>
         </div>
       </aside>
 
       {/* Main Chat Area */}
       <main className="flex-1 flex flex-col backdrop-blur-sm relative z-10">
         {/* Header */}
-        <header className="bg-white/95 md:bg-white/80 backdrop-blur-xl border-b border-gray-200/50 px-3 py-3 md:px-6 md:py-4 flex items-center justify-between shadow-sm sticky top-0 z-30">
+        <header className="bg-gradient-to-r from-[#0F2027]/95 to-[#1B2735]/95 backdrop-blur-xl border-b border-[#00A86B]/20 px-3 py-3 md:px-6 md:py-4 flex items-center justify-between shadow-lg sticky top-0 z-30">
           <div className="flex items-center gap-2 md:gap-4 flex-1 min-w-0">
-            {/* <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded-xl transition-colors"
-            >
-              <Menu className="w-5 h-5 md:w-5 md:h-5 text-gray-700" />
-            </button> */}
-            
             <div className="flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-              <div className="relative flex-shrink-0">
-                <div className="p-1.5 md:p-2 bg-white rounded-xl shadow-md md:shadow-lg border-2 border-green-200">
+              <div className="relative flex-shrink-0 group">
+                <div className="p-1.5 md:p-2 bg-gradient-to-br from-[#00A86B] to-[#3BB273] rounded-2xl shadow-lg border-2 border-[#F2C94C]/30 group-hover:border-[#F2C94C]/60 transition-all duration-300">
                   <Image
                     src="/logo.png"
                     alt="LuraFarm Logo"
                     width={32}
                     height={32}
-                    className="w-6 h-6 md:w-8 md:h-8"
+                    className="w-6 h-6 md:w-8 md:h-8 group-hover:scale-110 transition-transform duration-300"
                   />
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 md:w-3 md:h-3 bg-[#F2C94C] rounded-full border-2 border-[#0F2027] shadow-lg shadow-[#F2C94C]/50 animate-pulse" />
+                <div className="absolute inset-0 bg-[#00A86B]/20 rounded-2xl blur-lg group-hover:bg-[#00A86B]/40 transition-all duration-300"></div>
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="font-bold text-gray-900 text-sm md:text-lg truncate">
+                <h1 className="font-bold text-white text-sm md:text-lg truncate tracking-wide">
                   {activeConversation?.title || 'Lura'}
                 </h1>
-                <p className="text-[10px] md:text-xs text-green-600 font-medium flex items-center gap-1 truncate">
-                  <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-green-500 rounded-full animate-pulse flex-shrink-0"></span>
-                  <span className="truncate">Online</span>
+                <p className="text-[10px] md:text-xs text-[#00A86B] font-semibold flex items-center gap-1 truncate">
+                  <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-[#F2C94C] rounded-full animate-pulse flex-shrink-0 shadow-lg shadow-[#F2C94C]/50"></span>
+                  <span className="truncate">Online • IA Agrícola</span>
                 </p>
               </div>
             </div>
@@ -1161,7 +1191,7 @@ export default function ChatbotPage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="hidden md:block p-2 hover:bg-gray-100 rounded-xl transition-colors"
+              className="hidden md:block p-2 hover:bg-[#00A86B]/20 rounded-xl transition-all duration-300 text-white hover:text-[#F2C94C]"
             >
               {sidebarOpen ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
             </button>
@@ -1174,10 +1204,10 @@ export default function ChatbotPage() {
           {showScrollButton && (
             <button
               onClick={scrollToBottom}
-              className="fixed bottom-24 right-4 md:bottom-28 md:right-8 z-40 p-3 bg-white hover:bg-gray-50 rounded-full shadow-lg border border-gray-200 transition-all duration-200 hover:scale-110 active:scale-95 group"
+              className="fixed bottom-24 right-4 md:bottom-28 md:right-8 z-40 p-3 bg-gradient-to-br from-[#00A86B] to-[#3BB273] hover:from-[#3BB273] hover:to-[#00A86B] rounded-full shadow-xl shadow-[#00A86B]/50 border border-[#F2C94C]/30 transition-all duration-300 hover:scale-110 active:scale-95 group"
               title="Ir para mensagem mais recente"
             >
-              <ArrowDown className="w-5 h-5 text-gray-600 group-hover:text-green-600 transition-colors" />
+              <ArrowDown className="w-5 h-5 text-white group-hover:animate-bounce transition-all" />
             </button>
           )}
 
@@ -1185,37 +1215,38 @@ export default function ChatbotPage() {
             {messages.length === 0 && (
               <div className="flex items-center justify-center h-full min-h-[60vh]">
                 <div className="text-center py-8 md:py-12 px-4 max-w-2xl">
-                  <div className="inline-flex p-4 md:p-5 bg-white rounded-3xl shadow-xl mb-6 border-2 border-green-200">
+                  <div className="inline-flex p-4 md:p-5 bg-gradient-to-br from-[#00A86B] to-[#3BB273] rounded-3xl shadow-2xl mb-6 border-2 border-[#F2C94C]/30 relative group animate-float">
                     <Image
                       src="/logo.png"
                       alt="LuraFarm Logo"
                       width={64}
                       height={64}
-                      className="w-12 h-12 md:w-16 md:h-16"
+                      className="w-12 h-12 md:w-16 md:h-16 relative z-10"
                     />
+                    <div className="absolute inset-0 bg-[#F2C94C]/20 rounded-3xl blur-xl group-hover:blur-2xl transition-all duration-500"></div>
                   </div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-wide">
                     Olá! Sou a Lura 👋
                   </h2>
-                  <p className="text-base md:text-lg text-gray-600 mb-8 leading-relaxed">
+                  <p className="text-base md:text-lg text-[#C2B280] mb-8 leading-relaxed">
                     Sua assistente agrícola inteligente. Posso ajudar com técnicas de cultivo, 
                     análise de pragas, recomendações de culturas, gestão de água e muito mais!
                   </p>
                   
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4 mb-8">
                     {[
-                      { icon: '🌱', text: 'Cultivo', color: 'from-green-50 to-green-100 hover:from-green-100 hover:to-green-200', prompt: 'Como plantar milho?' },
-                      { icon: '🐛', text: 'Pragas', color: 'from-red-50 to-red-100 hover:from-red-100 hover:to-red-200', prompt: 'Pragas no tomate' },
-                      { icon: '💧', text: 'Irrigação', color: 'from-blue-50 to-blue-100 hover:from-blue-100 hover:to-blue-200', prompt: 'Irrigação eficiente' },
-                      { icon: '🌾', text: 'Culturas', color: 'from-amber-50 to-amber-100 hover:from-amber-100 hover:to-amber-200', prompt: 'Melhor época para plantar' }
+                      { icon: '🌱', text: 'Cultivo', color: 'from-[#00A86B]/20 to-[#3BB273]/10 hover:from-[#00A86B]/30 hover:to-[#3BB273]/20', border: 'border-[#00A86B]/30 hover:border-[#00A86B]/60', prompt: 'Como plantar milho?' },
+                      { icon: '🐛', text: 'Pragas', color: 'from-red-500/20 to-red-600/10 hover:from-red-500/30 hover:to-red-600/20', border: 'border-red-500/30 hover:border-red-500/60', prompt: 'Pragas no tomate' },
+                      { icon: '💧', text: 'Irrigação', color: 'from-blue-500/20 to-blue-600/10 hover:from-blue-500/30 hover:to-blue-600/20', border: 'border-blue-500/30 hover:border-blue-500/60', prompt: 'Irrigação eficiente' },
+                      { icon: '🌾', text: 'Culturas', color: 'from-[#F2C94C]/20 to-amber-500/10 hover:from-[#F2C94C]/30 hover:to-amber-500/20', border: 'border-[#F2C94C]/30 hover:border-[#F2C94C]/60', prompt: 'Melhor época para plantar' }
                     ].map((item, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleSubmitWithStreaming(null, item.prompt)}
-                        className={`p-4 bg-gradient-to-br ${item.color} rounded-2xl transition-all border border-gray-200 shadow-sm active:scale-95 cursor-pointer`}
+                        className={`p-4 bg-gradient-to-br ${item.color} rounded-2xl transition-all duration-300 border-2 ${item.border} shadow-lg hover:shadow-xl active:scale-95 cursor-pointer backdrop-blur-sm group`}
                       >
-                        <div className="text-3xl md:text-4xl mb-2">{item.icon}</div>
-                        <div className="text-xs md:text-sm font-semibold text-gray-700">
+                        <div className="text-3xl md:text-4xl mb-2 group-hover:scale-110 transition-transform duration-300">{item.icon}</div>
+                        <div className="text-xs md:text-sm font-semibold text-white">
                           {item.text}
                         </div>
                       </button>
@@ -1223,7 +1254,7 @@ export default function ChatbotPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <p className="text-sm text-gray-500 font-medium">Exemplos do que você pode perguntar:</p>
+                    <p className="text-sm text-[#C2B280]/70 font-medium">Exemplos do que você pode perguntar:</p>
                     <div className="flex flex-wrap gap-2 justify-center">
                       {[
                         'Como plantar milho?',
@@ -1234,7 +1265,7 @@ export default function ChatbotPage() {
                         <button
                           key={idx}
                           onClick={() => handleSubmitWithStreaming(null, example)}
-                          className="px-4 py-2 bg-white border border-gray-300 rounded-full text-sm text-gray-700 hover:border-green-500 hover:bg-green-50 hover:text-green-700 transition-all active:scale-95 shadow-sm"
+                          className="px-4 py-2 bg-[#00A86B]/10 border border-[#00A86B]/30 rounded-full text-sm text-white hover:border-[#00A86B] hover:bg-[#00A86B]/20 transition-all duration-300 active:scale-95 shadow-sm hover:shadow-lg backdrop-blur-sm"
                         >
                           {example}
                         </button>
@@ -1248,16 +1279,17 @@ export default function ChatbotPage() {
             {messages.map((message, index) => (
               <div
                 key={index}
-                className={`flex gap-2 md:gap-4 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} group`}
+                className={`flex gap-2 md:gap-4 ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'} group animate-fadeIn`}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   {message.role === 'user' ? (
-                    <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-green-600 to-green-700 rounded-full flex items-center justify-center shadow-md">
-                      <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-white" />
+                    <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-[#E8E5D8] to-[#C2B280] rounded-full flex items-center justify-center shadow-lg shadow-[#C2B280]/30 border-2 border-[#C2B280]/50">
+                      <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#0F2027]" />
                     </div>
                   ) : (
-                    <div className="w-7 h-7 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-green-200 p-1">
+                    <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-[#00A86B] to-[#3BB273] rounded-full flex items-center justify-center shadow-lg shadow-[#00A86B]/30 border-2 border-[#F2C94C]/30 p-1 relative group-hover:scale-110 transition-transform duration-300">
                       <Image
                         src="/logo.png"
                         alt="Lura"
@@ -1265,6 +1297,7 @@ export default function ChatbotPage() {
                         height={24}
                         className="w-full h-full"
                       />
+                      <div className="absolute inset-0 bg-[#00A86B]/20 rounded-full blur-md group-hover:blur-lg transition-all duration-300"></div>
                     </div>
                   )}
                 </div>
@@ -1272,16 +1305,16 @@ export default function ChatbotPage() {
                 {/* Message Content */}
                 <div className="flex-1 min-w-0">
                   <div className={`${message.role === 'user' ? 'ml-auto' : 'mr-auto'} max-w-full md:max-w-3xl`}>
-                    <div className={`rounded-2xl md:rounded-3xl px-3 py-3 md:px-5 md:py-4 ${
+                    <div className={`rounded-2xl md:rounded-3xl px-3 py-3 md:px-5 md:py-4 transition-all duration-300 ${
                       message.role === 'user'
-                        ? 'bg-gradient-to-br from-green-600 to-green-700 text-white shadow-lg user-message'
-                        : 'bg-white md:bg-gray-50 border border-gray-200 text-gray-900 shadow-sm'
+                        ? 'bg-gradient-to-br from-[#E8E5D8] to-[#C2B280] text-[#0F2027] shadow-lg shadow-[#C2B280]/30 user-message border border-[#C2B280]/30'
+                        : 'bg-gradient-to-br from-[#1B2735]/80 to-[#0F2027]/60 border border-[#00A86B]/20 text-white shadow-lg shadow-[#00A86B]/10 backdrop-blur-sm'
                     }`}>
-                      {message.role === 'assistant' && (
+                      {message.role === 'assistant' && ((message.content && message.content.trim().length > 0) || index === streamingMessageIndex) && (
                         <div className="flex items-center gap-1.5 md:gap-2 mb-2 md:mb-3">
-                          <span className="text-[11px] md:text-xs font-semibold text-green-600">Lura</span>
-                          <span className="w-0.5 h-0.5 md:w-1 md:h-1 bg-gray-300 rounded-full"></span>
-                          <span className="text-[10px] md:text-xs text-gray-400">{formatTime(message.timestamp!)}</span>
+                          <span className="text-[11px] md:text-xs font-semibold text-[#00A86B]">Lura</span>
+                          <span className="w-0.5 h-0.5 md:w-1 md:h-1 bg-[#C2B280]/30 rounded-full"></span>
+                          <span className="text-[10px] md:text-xs text-[#C2B280]/70">{formatTime(message.timestamp!)}</span>
                         </div>
                       )}
                       
@@ -1313,17 +1346,30 @@ export default function ChatbotPage() {
                       ) : (
                         <>
                           {message.role === 'assistant' && index === streamingMessageIndex ? (
-                            <StreamingMessage
-                              content={message.content}
-                              contentHtml={message.content_html}
-                              isNewMessage={true}
-                              onStreamComplete={() => setStreamingMessageIndex(null)}
-                              className="ai-message-content text-sm md:text-[15px]"
-                              baseSpeed={typingSpeed}
-                            />
+                            ( (message.content && message.content.trim().length > 0) || message.content_html ) ? (
+                              <StreamingMessage
+                                content={message.content}
+                                contentHtml={message.content_html}
+                                isNewMessage={true}
+                                onStreamComplete={() => { setIsLoading(false); setStreamingMessageIndex(null); }}
+                                className="ai-message-content text-sm md:text-[15px]"
+                                baseSpeed={typingSpeed}
+                              />
+                            ) : (
+                              <div className="ai-message-content text-sm md:text-[15px] text-[#C2B280]/70">
+                                <div className="flex items-center gap-2">
+                                  <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin text-[#00A86B]" />
+                                  <div className="flex gap-1">
+                                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#00A86B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#3BB273] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                                    <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-[#F2C94C] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                                  </div>
+                                </div>
+                              </div>
+                            )
                           ) : message.content_html ? (
                             <div 
-                              className="ai-message-content text-sm md:text-[15px]"
+                              className="ai-message-content text-sm md:text-[15px] text-white"
                               dangerouslySetInnerHTML={{ __html: message.content_html }}
                             />
                           ) : (
@@ -1333,14 +1379,14 @@ export default function ChatbotPage() {
                       )}
 
                       {message.truncated && (
-                        <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-yellow-200 text-xs text-yellow-700 flex items-center gap-2">
+                        <div className="mt-2 md:mt-3 pt-2 md:pt-3 border-t border-[#F2C94C]/20 text-xs text-[#F2C94C] flex items-center gap-2">
                           <Loader2 className="w-3 h-3 animate-spin" />
                           <span>Completando...</span>
                         </div>
                       )}
                       
                       {message.role === 'user' && message.timestamp && (
-                        <div className="text-[10px] md:text-xs mt-1.5 md:mt-2 text-green-100 text-right">
+                        <div className="text-[10px] md:text-xs mt-1.5 md:mt-2 text-[#0F2027]/60 text-right">
                           {formatTime(message.timestamp)}
                         </div>
                       )}
@@ -1348,12 +1394,12 @@ export default function ChatbotPage() {
 
                     {/* Action Buttons */}
                     {!message.truncated && editingMessageIndex !== index && (
-                      <div className="flex items-center gap-1 md:gap-2 mt-1.5 md:mt-2 ml-1 md:ml-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-1 md:gap-2 mt-1.5 md:mt-2 ml-1 md:ml-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         {/* Botão Editar - SOMENTE para mensagens do usuário */}
                         {message.role === 'user' && (
                           <button
                             onClick={() => handleEditMessage(index, message.content)}
-                            className="p-1.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+                            className="p-1.5 hover:bg-[#00A86B]/20 active:bg-[#00A86B]/30 rounded-lg transition-all duration-300 text-[#C2B280] hover:text-[#00A86B]"
                             title="Editar"
                           >
                             <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1366,11 +1412,11 @@ export default function ChatbotPage() {
                           <>
                             <button
                               onClick={() => copyToClipboard(getCopyText(message), index)}
-                              className="p-1.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors text-gray-500 hover:text-gray-700"
+                              className="p-1.5 hover:bg-[#00A86B]/20 active:bg-[#00A86B]/30 rounded-lg transition-all duration-300 text-[#C2B280] hover:text-[#00A86B]"
                               title="Copiar"
                             >
                               {copiedIndex === index ? (
-                                <CheckCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-600" />
+                                <CheckCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#F2C94C]" />
                               ) : (
                                 <Copy className="w-3.5 h-3.5 md:w-4 md:h-4" />
                               )}
@@ -1378,7 +1424,7 @@ export default function ChatbotPage() {
                             <button
                               onClick={() => regenerateResponse(index)}
                               disabled={isLoading}
-                              className="p-1.5 hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-colors text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                              className="p-1.5 hover:bg-[#00A86B]/20 active:bg-[#00A86B]/30 rounded-lg transition-all duration-300 text-[#C2B280] hover:text-[#00A86B] disabled:opacity-50"
                               title="Regenerar"
                             >
                               <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -1392,10 +1438,11 @@ export default function ChatbotPage() {
               </div>
             ))}
 
-            {isLoading && (
-              <div className="flex gap-2 md:gap-4">
+            {/* Indicador de loading: só mostra se NÃO houver placeholder de streaming */}
+            {isLoading && streamingMessageIndex === null && (
+              <div className="flex gap-2 md:gap-4 animate-fadeIn">
                 <div className="flex-shrink-0">
-                  <div className="w-7 h-7 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center shadow-md border-2 border-green-200 p-1">
+                  <div className="w-7 h-7 md:w-8 md:h-8 bg-gradient-to-br from-[#00A86B] to-[#3BB273] rounded-full flex items-center justify-center shadow-lg shadow-[#00A86B]/30 border-2 border-[#F2C94C]/30 p-1 animate-pulse">
                     <Image
                       src="/logo.png"
                       alt="Lura"
@@ -1406,14 +1453,14 @@ export default function ChatbotPage() {
                   </div>
                 </div>
                 <div className="flex-1">
-                  <div className="bg-white md:bg-gray-50 border border-gray-200 rounded-2xl md:rounded-3xl px-3 py-3 md:px-5 md:py-4 shadow-sm max-w-full md:max-w-3xl">
-                    <div className="flex items-center gap-2 md:gap-3 text-gray-600">
-                      <Loader2 className="w-3.5 h-3.5 md:w-4 md:h-4 animate-spin text-green-600" />
-                      <div className="flex gap-1">
-                        <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                        <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                        <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                  <div className="bg-gradient-to-br from-[#1B2735]/80 to-[#0F2027]/60 border border-[#00A86B]/20 rounded-2xl md:rounded-3xl px-3 py-3 md:px-5 md:py-4 shadow-lg shadow-[#00A86B]/10 backdrop-blur-sm max-w-full md:max-w-3xl">
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <div className="flex gap-1.5">
+                        <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#00A86B] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#3BB273] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-2 h-2 md:w-2.5 md:h-2.5 bg-[#F2C94C] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                       </div>
+                      <span className="text-xs text-[#C2B280]/70">Lura está pensando...</span>
                     </div>
                   </div>
                 </div>
@@ -1421,9 +1468,9 @@ export default function ChatbotPage() {
             )}
 
             {error && (
-              <div className="flex justify-center px-2">
-                <div className="bg-red-50 border border-red-200 rounded-xl md:rounded-2xl px-4 py-2.5 md:px-5 md:py-3 shadow-sm w-full md:w-auto">
-                  <div className="flex items-center gap-2 text-red-600">
+              <div className="flex justify-center px-2 animate-fadeIn">
+                <div className="bg-red-500/10 border border-red-500/30 rounded-xl md:rounded-2xl px-4 py-2.5 md:px-5 md:py-3 shadow-lg backdrop-blur-sm w-full md:w-auto">
+                  <div className="flex items-center gap-2 text-red-400">
                     <AlertCircle className="w-3.5 h-3.5 md:w-4 md:h-4 flex-shrink-0" />
                     <span className="text-xs md:text-sm font-medium">{error}</span>
                   </div>
@@ -1436,19 +1483,19 @@ export default function ChatbotPage() {
         </div>
 
         {/* Input Area - Fixed bottom on mobile */}
-        <div className="border-t border-gray-200/50 bg-white md:bg-white/80 backdrop-blur-xl p-2 md:p-4 sticky bottom-0 z-20">
+        <div className="border-t border-[#00A86B]/20 bg-gradient-to-b from-[#1B2735]/95 to-[#0F2027]/95 backdrop-blur-xl p-2 md:p-4 sticky bottom-0 z-20">
           <div className="max-w-4xl mx-auto">
             {imagePreview && (
-              <div className="mb-2 md:mb-3 px-1">
+              <div className="mb-2 md:mb-3 px-1 animate-fadeIn">
                 <div className="relative inline-block group">
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="h-20 w-20 md:h-24 md:w-24 object-cover rounded-xl border-2 border-gray-300 shadow-md"
+                    className="h-20 w-20 md:h-24 md:w-24 object-cover rounded-xl border-2 border-[#00A86B]/30 shadow-lg shadow-[#00A86B]/20"
                   />
                   <button
                     onClick={removeImage}
-                    className="absolute -top-1 -right-1 md:-top-2 md:-right-2 p-1 md:p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 active:bg-red-700 shadow-lg"
+                    className="absolute -top-1 -right-1 md:-top-2 md:-right-2 p-1 md:p-1.5 bg-gradient-to-br from-red-500 to-red-600 text-white rounded-full hover:from-red-600 hover:to-red-700 active:scale-90 shadow-lg transition-all duration-300"
                   >
                     <X className="w-3 h-3 md:w-3.5 md:h-3.5" />
                   </button>
@@ -1465,15 +1512,15 @@ export default function ChatbotPage() {
                 className="hidden"
               />
               
-              <div className="flex items-end gap-1 md:gap-2 bg-white border-2 md:border border-gray-300 rounded-3xl shadow-lg md:hover:shadow-xl transition-shadow p-1.5 md:p-2">
+              <div className="flex items-end gap-1 md:gap-2 bg-gradient-to-br from-[#1B2735] to-[#0F2027] border-2 border-[#00A86B]/30 rounded-3xl shadow-xl shadow-[#00A86B]/20 hover:shadow-2xl hover:shadow-[#00A86B]/30 transition-all duration-300 p-1.5 md:p-2 backdrop-blur-sm">
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isLoading}
-                  className="p-2 md:p-2.5 text-gray-600 hover:text-green-600 active:bg-green-50 rounded-xl transition-all disabled:opacity-50"
+                  className="p-2 md:p-2.5 text-[#C2B280] hover:text-[#00A86B] active:bg-[#00A86B]/10 rounded-xl transition-all duration-300 disabled:opacity-50 group"
                   title="Anexar imagem"
                 >
-                  <ImageIcon className="w-4 h-4 md:w-5 md:h-5" />
+                  <ImageIcon className="w-4 h-4 md:w-5 md:h-5 group-hover:scale-110 transition-transform duration-300" />
                 </button>
 
                 <textarea
@@ -1489,24 +1536,24 @@ export default function ChatbotPage() {
                   placeholder="Mensagem para Lura..."
                   disabled={isLoading}
                   rows={1}
-                  className="flex-1 px-1 md:px-2 py-2 md:py-2.5 bg-transparent focus:outline-none disabled:opacity-50 resize-none text-sm md:text-[15px] max-h-28 md:max-h-32 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                  className="flex-1 px-1 md:px-2 py-2 md:py-2.5 bg-transparent text-white placeholder-[#C2B280]/50 focus:outline-none disabled:opacity-50 resize-none text-sm md:text-[15px] max-h-28 md:max-h-32 scrollbar-thin scrollbar-thumb-[#00A86B]/30 scrollbar-track-transparent"
                 />
 
                 <button
                   type="submit"
                   disabled={(!inputValue.trim() && !uploadedImage) || isLoading}
-                  className="p-2 md:p-2.5 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 active:scale-95 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed transition-all shadow-md hover:shadow-lg"
+                  className="p-2 md:p-2.5 bg-gradient-to-r from-[#00A86B] to-[#3BB273] text-white rounded-xl hover:from-[#3BB273] hover:to-[#00A86B] active:scale-95 disabled:from-[#1B2735] disabled:to-[#0F2027] disabled:cursor-not-allowed transition-all duration-500 shadow-lg shadow-[#00A86B]/30 hover:shadow-xl hover:shadow-[#00A86B]/50 group"
                 >
                   {isLoading ? (
                     <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
                   ) : (
-                    <Send className="w-4 h-4 md:w-5 md:h-5" />
+                    <Send className="w-4 h-4 md:w-5 md:h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300" />
                   )}
                 </button>
               </div>
             </form>
 
-            <div className="mt-2 md:mt-3 text-[10px] md:text-xs text-gray-500 text-center px-2">
+            <div className="mt-2 md:mt-3 text-[10px] md:text-xs text-[#C2B280]/50 text-center px-2">
               A Lura pode cometer erros. Consulte um especialista.
             </div>
           </div>
@@ -1516,10 +1563,10 @@ export default function ChatbotPage() {
         {messages.length > 0 && (
           <button
             onClick={createNewConversation}
-            className="md:hidden fixed bottom-20 right-4 p-4 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-full shadow-2xl hover:shadow-3xl active:scale-95 transition-all z-30"
+            className="md:hidden fixed bottom-20 right-4 p-4 bg-gradient-to-r from-[#00A86B] to-[#3BB273] text-white rounded-full shadow-2xl shadow-[#00A86B]/50 hover:shadow-3xl hover:from-[#3BB273] hover:to-[#00A86B] active:scale-95 transition-all duration-500 z-30 border-2 border-[#F2C94C]/30 group"
             title="Nova conversa"
           >
-            <Plus className="w-6 h-6" />
+            <Plus className="w-6 h-6 group-hover:rotate-180 transition-transform duration-500" />
           </button>
         )}
       </main>
