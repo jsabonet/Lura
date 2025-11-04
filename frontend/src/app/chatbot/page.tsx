@@ -921,9 +921,44 @@ export default function ChatbotPage() {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedIndex(index);
+      
+      // Toast notification visual
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#00A86B] to-[#3BB273] text-white px-6 py-3 rounded-2xl shadow-2xl shadow-[#00A86B]/50 z-50 flex items-center gap-2 animate-fadeIn border-2 border-[#F2C94C]/30';
+      toast.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+        </svg>
+        <span class="font-semibold">Copiado com sucesso!</span>
+      `;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translate(-50%, 10px)';
+        toast.style.transition = 'all 0.3s ease-out';
+        setTimeout(() => document.body.removeChild(toast), 300);
+      }, 2000);
+      
       setTimeout(() => setCopiedIndex(null), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+      
+      // Toast de erro
+      const errorToast = document.createElement('div');
+      errorToast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-2xl shadow-2xl z-50 flex items-center gap-2 animate-fadeIn';
+      errorToast.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+        </svg>
+        <span class="font-semibold">Erro ao copiar</span>
+      `;
+      document.body.appendChild(errorToast);
+      
+      setTimeout(() => {
+        errorToast.style.opacity = '0';
+        setTimeout(() => document.body.removeChild(errorToast), 300);
+      }, 2000);
     }
   };
 
@@ -1057,6 +1092,17 @@ export default function ChatbotPage() {
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
+        {/* Indicador de Swipe para Mobile */}
+        {sidebarOpen && (
+          <div className="md:hidden absolute right-0 top-1/2 -translate-y-1/2 -mr-8 pointer-events-none">
+            <div className="flex flex-col items-center gap-1 opacity-50">
+              <ChevronLeft className="w-5 h-5 text-white animate-pulse" />
+              <div className="w-0.5 h-12 bg-gradient-to-b from-transparent via-white to-transparent"></div>
+              <ChevronLeft className="w-5 h-5 text-white animate-pulse" style={{ animationDelay: '0.5s' }} />
+            </div>
+          </div>
+        )}
+        
         <div className="p-3 md:p-4 border-b border-[#00A86B]/10">
           <div className="flex items-center justify-between mb-3 md:mb-4">
             <div className="flex items-center gap-2 group">
@@ -1091,7 +1137,21 @@ export default function ChatbotPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-[#00A86B]/30 scrollbar-track-transparent overscroll-contain">
-          <div className="text-xs font-semibold text-[#C2B280] px-3 py-2 mb-1 md:text-[11px] uppercase tracking-wider">Histórico</div>
+          <div className="flex items-center justify-between px-3 py-2 mb-1">
+            <div className="text-xs font-semibold text-[#C2B280] md:text-[11px] uppercase tracking-wider">Histórico</div>
+            {conversations.length > 0 && (
+              <div className="text-xs font-bold text-[#F2C94C] bg-[#F2C94C]/20 px-2 py-0.5 rounded-full border border-[#F2C94C]/30">
+                {conversations.length}
+              </div>
+            )}
+          </div>
+          {conversations.length === 0 && (
+            <div className="text-center py-8 px-4">
+              <MessageSquare className="w-12 h-12 text-[#00A86B]/30 mx-auto mb-3" />
+              <p className="text-sm text-[#C2B280]/70">Nenhuma conversa ainda</p>
+              <p className="text-xs text-[#C2B280]/50 mt-1">Inicie uma nova conversa</p>
+            </div>
+          )}
           {conversations.map(conv => (
             <div
               key={conv.id}
@@ -1189,6 +1249,16 @@ export default function ChatbotPage() {
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Botão de menu para mobile */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="md:hidden p-2 hover:bg-[#00A86B]/20 rounded-xl transition-all duration-300 text-white hover:text-[#F2C94C] active:scale-95"
+              aria-label="Abrir menu"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            
+            {/* Botão de toggle para desktop */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="hidden md:block p-2 hover:bg-[#00A86B]/20 rounded-xl transition-all duration-300 text-white hover:text-[#F2C94C]"
@@ -1320,28 +1390,41 @@ export default function ChatbotPage() {
                       
                       {/* Modo de Edição */}
                       {editingMessageIndex === index ? (
-                        <div className="space-y-2">
+                        <div className="space-y-3 animate-fadeIn">
+                          <div className="flex items-center gap-2 mb-2">
+                            <svg className="w-4 h-4 text-[#F2C94C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            <span className="text-xs font-semibold text-[#F2C94C]">Editando mensagem</span>
+                          </div>
                           <textarea
                             value={editedContent}
                             onChange={(e) => setEditedContent(e.target.value)}
-                            className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-y text-sm text-gray-900"
+                            className="w-full min-h-[120px] px-4 py-3 bg-[#0F2027] border-2 border-[#00A86B]/30 text-white placeholder-[#C2B280]/50 rounded-xl focus:ring-2 focus:ring-[#00A86B] focus:border-[#00A86B] resize-y text-sm leading-relaxed transition-all duration-300 shadow-inner"
+                            placeholder="Edite sua mensagem..."
                             autoFocus
                           />
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleSaveEdit(index)}
-                              className="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-lg transition-colors flex items-center gap-1"
+                              className="flex-1 px-4 py-2 bg-gradient-to-r from-[#00A86B] to-[#3BB273] hover:from-[#3BB273] hover:to-[#00A86B] text-white text-sm font-semibold rounded-xl transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-[#00A86B]/30 active:scale-95"
                             >
-                              <CheckCheck className="w-3.5 h-3.5" />
-                              Salvar
+                              <CheckCheck className="w-4 h-4" />
+                              Salvar Alterações
                             </button>
                             <button
                               onClick={handleCancelEdit}
-                              className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs rounded-lg transition-colors"
+                              className="px-4 py-2 bg-[#1B2735]/50 hover:bg-[#1B2735]/70 text-white text-sm font-semibold rounded-xl transition-all duration-300 border border-[#00A86B]/20 hover:border-[#00A86B]/40 active:scale-95"
                             >
                               Cancelar
                             </button>
                           </div>
+                          <p className="text-xs text-[#C2B280]/70 flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Edite sua mensagem e clique em salvar para atualizar
+                          </p>
                         </div>
                       ) : (
                         <>
@@ -1395,25 +1478,39 @@ export default function ChatbotPage() {
                     {/* Action Buttons */}
                     {!message.truncated && editingMessageIndex !== index && (
                       <div className="flex items-center gap-1 md:gap-2 mt-1.5 md:mt-2 ml-1 md:ml-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        {/* Botão Editar - SOMENTE para mensagens do usuário */}
+                        {/* Botões para mensagens do usuário */}
                         {message.role === 'user' && (
-                          <button
-                            onClick={() => handleEditMessage(index, message.content)}
-                            className="p-1.5 hover:bg-[#00A86B]/20 active:bg-[#00A86B]/30 rounded-lg transition-all duration-300 text-[#C2B280] hover:text-[#00A86B]"
-                            title="Editar"
-                          >
-                            <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                          </button>
+                          <>
+                            <button
+                              onClick={() => copyToClipboard(message.content, index)}
+                              className="p-1.5 hover:bg-[#00A86B]/20 active:bg-[#00A86B]/30 rounded-lg transition-all duration-300 text-[#C2B280] hover:text-[#00A86B]"
+                              title="Copiar mensagem"
+                            >
+                              {copiedIndex === index ? (
+                                <CheckCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#F2C94C]" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                              )}
+                            </button>
+                            <button
+                              onClick={() => handleEditMessage(index, message.content)}
+                              className="p-1.5 hover:bg-[#00A86B]/20 active:bg-[#00A86B]/30 rounded-lg transition-all duration-300 text-[#C2B280] hover:text-[#00A86B]"
+                              title="Editar mensagem"
+                            >
+                              <svg className="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          </>
                         )}
                         
+                        {/* Botões para mensagens da IA */}
                         {message.role === 'assistant' && (
                           <>
                             <button
                               onClick={() => copyToClipboard(getCopyText(message), index)}
                               className="p-1.5 hover:bg-[#00A86B]/20 active:bg-[#00A86B]/30 rounded-lg transition-all duration-300 text-[#C2B280] hover:text-[#00A86B]"
-                              title="Copiar"
+                              title="Copiar resposta"
                             >
                               {copiedIndex === index ? (
                                 <CheckCheck className="w-3.5 h-3.5 md:w-4 md:h-4 text-[#F2C94C]" />
@@ -1425,7 +1522,7 @@ export default function ChatbotPage() {
                               onClick={() => regenerateResponse(index)}
                               disabled={isLoading}
                               className="p-1.5 hover:bg-[#00A86B]/20 active:bg-[#00A86B]/30 rounded-lg transition-all duration-300 text-[#C2B280] hover:text-[#00A86B] disabled:opacity-50"
-                              title="Regenerar"
+                              title="Regenerar resposta"
                             >
                               <RotateCcw className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             </button>
@@ -1558,15 +1655,20 @@ export default function ChatbotPage() {
             </div>
           </div>
         </div>
-
-        {/* Floating New Chat Button (Mobile Only) */}
-        {messages.length > 0 && (
+        
+        {/* Floating Menu Button (Mobile Only) - Quando sidebar está fechado */}
+        {!sidebarOpen && messages.length > 0 && (
           <button
-            onClick={createNewConversation}
-            className="md:hidden fixed bottom-20 right-4 p-4 bg-gradient-to-r from-[#00A86B] to-[#3BB273] text-white rounded-full shadow-2xl shadow-[#00A86B]/50 hover:shadow-3xl hover:from-[#3BB273] hover:to-[#00A86B] active:scale-95 transition-all duration-500 z-30 border-2 border-[#F2C94C]/30 group"
-            title="Nova conversa"
+            onClick={() => setSidebarOpen(true)}
+            className="md:hidden fixed bottom-20 left-4 p-3 bg-gradient-to-r from-[#1B2735] to-[#0F2027] text-white rounded-full shadow-2xl border-2 border-[#00A86B]/30 hover:border-[#00A86B] active:scale-95 transition-all duration-300 z-30 backdrop-blur-sm group"
+            title="Abrir menu"
           >
-            <Plus className="w-6 h-6 group-hover:rotate-180 transition-transform duration-500" />
+            <Menu className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+            {conversations.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#F2C94C] text-[#0F2027] text-xs font-bold rounded-full flex items-center justify-center border-2 border-[#0F2027] shadow-lg">
+                {conversations.length > 9 ? '9+' : conversations.length}
+              </span>
+            )}
           </button>
         )}
       </main>

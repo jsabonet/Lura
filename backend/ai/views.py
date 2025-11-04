@@ -155,13 +155,38 @@ class AIChatProxyView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
 
+        # Obter informações do usuário para personalização
+        user = request.user
+        user_name = user.get_full_name() or user.first_name or user.username
+        # Extrair apenas o primeiro nome para uma abordagem mais amigável
+        first_name_only = user.first_name if user.first_name else user_name.split()[0] if user_name else "amigo(a)"
+        
+        # Adicionar contexto do usuário às mensagens
+        messages = serializer.validated_data['messages']
+        
+        # Injetar informações do usuário no contexto do sistema
+        user_context = f"\n\nInformações do usuário: Nome: {first_name_only}"
+        if hasattr(user, 'provincia') and user.provincia:
+            user_context += f", Localização: {user.provincia}"
+        if hasattr(user, 'tipo_usuario') and user.tipo_usuario:
+            user_context += f", Tipo: {user.get_tipo_usuario_display()}"
+        
+        # Adicionar ao system message se existir, ou criar novo
+        if messages and messages[0].get('role') == 'system':
+            messages[0]['content'] += user_context + ". Use o primeiro nome do usuário (não use 'Sr.' ou 'Sra.') quando apropriado para criar uma conversa mais amigável e próxima. Quando criar tabelas, use formatação Markdown apropriada."
+        else:
+            messages.insert(0, {
+                'role': 'system',
+                'content': f"Você é a Lura, assistente da LuraFarm.{user_context}. Use o primeiro nome do usuário (não use 'Sr.' ou 'Sra.') quando apropriado para criar uma conversa mais amigável e próxima. Quando criar tabelas, use formatação Markdown apropriada."
+            })
+
         start_time = time.time()
         try:
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             result = loop.run_until_complete(
                 ai_service.chat_completion(
-                    messages=serializer.validated_data['messages']
+                    messages=messages
                 )
             )
         finally:
@@ -220,15 +245,31 @@ class AIChatStreamView(APIView):
         # Construir contexto do chat
         prompt_parts = []
 
-        # Injetar contexto do sistema com informações do criador
+        # Obter informações do usuário
+        user = request.user
+        user_name = user.get_full_name() or user.first_name or user.username
+        # Extrair apenas o primeiro nome para uma abordagem mais amigável
+        first_name_only = user.first_name if user.first_name else user_name.split()[0] if user_name else "amigo(a)"
+        user_info = f"Nome do usuário: {first_name_only}"
+        
+        # Adicionar informações adicionais se disponíveis
+        if hasattr(user, 'provincia') and user.provincia:
+            user_info += f", Localização: {user.provincia}"
+        if hasattr(user, 'tipo_usuario') and user.tipo_usuario:
+            user_info += f", Tipo: {user.get_tipo_usuario_display()}"
+
+        # Injetar contexto do sistema com informações do criador e do usuário
         system_context = (
             "Você é a Lura, assistente IA da plataforma LuraFarm, criada por Joel Lasmim, programador fullstack "
             "e estudante de Engenharia Agronômica e Desenvolvimento Rural. Joel é apaixonado por "
             "agricultura e programação e construiu esta plataforma para apoiar agricultores, unindo "
             "tecnologia e agronomia em uma solução inovadora. Sua missão é integrar o conhecimento "
-            "digital com as práticas agrícolas, trazendo inovação e eficiência ao setor. Responda de forma "
-            "clara, prática e útil para agricultores, e quando apropriado considere o contexto de Moçambique. "
-            "Seja completa e detalhada nas respostas, não deixe frases incompletas."
+            "digital com as práticas agrícolas, trazendo inovação e eficiência ao setor. "
+            f"\n\n{user_info}\n\n"
+            "Responda de forma clara, prática e útil para agricultores, e quando apropriado considere o contexto de Moçambique. "
+            "Quando adequado, use o primeiro nome do usuário (não use 'Sr.' ou 'Sra.') para criar uma conversa mais amigável e próxima. "
+            "Seja completa e detalhada nas respostas, não deixe frases incompletas. "
+            "Quando criar tabelas, use formatação Markdown apropriada para melhor visualização."
         )
         prompt_parts.append(f"Sistema: {system_context}")
         

@@ -3,11 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-  "predev": "node ./scripts/fix-server-chunks.js",
-  "dev": "next dev",
+    "predev": "node ./scripts/fix-server-chunks.js",
+    "dev": "next dev",
     "build": "next build",
-  "prestart": "node ./scripts/fix-server-chunks.js",
-  "start": "next start",
+    "prestart": "node ./scripts/fix-server-chunks.js",
+    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
@@ -18,7 +18,9 @@
     "lucide-react": "^0.542.0",
     "next": "15.5.0",
     "react": "^19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
