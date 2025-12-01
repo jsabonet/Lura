@@ -29,7 +29,9 @@ def get_model_usage_metrics():
 _SHORT_TO_CANONICAL = {
     'gemini-pro': 'models/gemini-pro-latest',
     'gemini-2.5-pro': 'models/gemini-2.5-pro',
-    'gemini-flash': 'models/gemini-flash-latest',
+    'gemini-flash': 'models/gemini-1.5-flash-latest',
+    'gemini-1.5-flash': 'models/gemini-1.5-flash-latest',
+    'gemini-1.5-pro': 'models/gemini-1.5-pro-latest',
     'gemini-2.5-flash': 'models/gemini-2.5-flash',
     'gemini-flash-lite': 'models/gemini-flash-lite-latest',
     'gemini-2.5-flash-lite': 'models/gemini-2.5-flash-lite',
@@ -389,8 +391,8 @@ class FirebaseAIService:
             }
             
         # Load default/fallback models from env
-        default_model = config('GOOGLE_AI_DEFAULT_MODEL', default='models/gemini-pro-latest')
-        fallback_models = config('GOOGLE_AI_FALLBACK_MODELS', default='models/gemini-2.5-pro,models/gemini-flash-latest,models/gemini-2.5-flash,models/gemini-flash-lite-latest')
+        default_model = config('GOOGLE_AI_DEFAULT_MODEL', default='models/gemini-1.5-flash-latest')
+        fallback_models = config('GOOGLE_AI_FALLBACK_MODELS', default='models/gemini-1.5-pro-latest,models/gemini-2.5-pro,models/gemini-flash-latest,models/gemini-2.5-flash')
         fallback_list = [m.strip() for m in fallback_models.split(',') if m.strip()]
         # Use provided model_name or default
         requested_model = model_name or default_model
@@ -767,7 +769,8 @@ class FirebaseAIService:
         max_output_tokens: int = 4096,  # Aumentado de 1024 para 4096 para respostas mais completas
         temperature: float = 0.7,
         top_p: float = 0.8,
-        top_k: int = 40
+        top_k: int = 40,
+        image_data: str = None  # Base64 image data for multimodal prompts
     ):
         """
         Gera texto com streaming em tempo real (word-by-word)
@@ -788,8 +791,8 @@ class FirebaseAIService:
             return
         
         # Load default/fallback models
-        default_model = config('GOOGLE_AI_DEFAULT_MODEL', default='models/gemini-pro-latest')
-        fallback_models = config('GOOGLE_AI_FALLBACK_MODELS', default='models/gemini-2.5-pro,models/gemini-flash-latest,models/gemini-2.5-flash,models/gemini-flash-lite-latest')
+        default_model = config('GOOGLE_AI_DEFAULT_MODEL', default='models/gemini-1.5-flash-latest')
+        fallback_models = config('GOOGLE_AI_FALLBACK_MODELS', default='models/gemini-1.5-pro-latest,models/gemini-2.5-pro,models/gemini-flash-latest,models/gemini-2.5-flash')
         fallback_list = [m.strip() for m in fallback_models.split(',') if m.strip()]
         requested_model = model_name or default_model
         all_candidates = [requested_model] + [m for m in fallback_list if m != requested_model]
@@ -803,9 +806,49 @@ class FirebaseAIService:
             try:
                 print(f"🔄 Iniciando streaming com modelo {resolved_name}")
                 
+                # Preparar conteúdo para o modelo
+                # Se houver imagem, criar prompt multimodal
+                content_parts = []
+                
+                if image_data:
+                    # Processar imagem base64 para o formato esperado pelo Gemini
+                    try:
+                        import base64
+                        from io import BytesIO
+                        from PIL import Image as PILImage
+                        
+                        # Remover prefixo data:image se presente
+                        if image_data.startswith('data:'):
+                            image_data = image_data.split(',', 1)[1]
+                        
+                        # Decodificar base64
+                        image_bytes = base64.b64decode(image_data)
+                        pil_image = PILImage.open(BytesIO(image_bytes))
+                        
+                        # Adicionar instrução específica para análise de imagem agrícola
+                        vision_context = (
+                            "Analise esta imagem detalhadamente considerando aspectos agrícolas. "
+                            "Identifique: 1) pragas ou doenças visíveis, 2) condição geral da planta, "
+                            "3) sintomas específicos (manchas, descoloração, deformações), "
+                            "4) recomendações de tratamento (orgânico e químico com dosagens). "
+                            "Seja específico e prático.\n\n"
+                        )
+                        
+                        # Criar partes multimodais (imagem + texto)
+                        content_parts = [vision_context + prompt, pil_image]
+                        print(f"📸 Imagem detectada - usando prompt multimodal com visão")
+                        
+                    except Exception as img_err:
+                        print(f"⚠️ Erro ao processar imagem: {img_err}")
+                        # Fallback para prompt texto apenas
+                        content_parts = [prompt]
+                else:
+                    # Prompt texto apenas
+                    content_parts = [prompt]
+                
                 # Generate content com streaming habilitado
                 response = model.generate_content(
-                    prompt,
+                    content_parts,
                     generation_config={
                         'max_output_tokens': max_output_tokens,
                         'temperature': temperature,

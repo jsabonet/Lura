@@ -40,39 +40,69 @@ def detectar_praga_view(request):
         analysis_result = huggingface_service.analyze_crop_health(
             image_data, crop_type
         )
-        
-        # Salvar detecção no banco se pragas foram encontradas
-        if analysis_result.get('pest_detection', {}).get('pests_detected'):
-            detection_record = DeteccaoPraga.objects.create(
-                agricultor=request.user,
-                localizacao=location,
-                tipo_cultura=crop_type,
-                confianca=analysis_result['pest_detection']['confidence'],
-                resultado_analise=analysis_result,
-                coordenadas=request.data.get('coordinates', '')
-            )
-            
-            # Enviar notificação se confiança alta
-            if analysis_result['pest_detection']['confidence'] > 0.7:
-                user_data = {
-                    'first_name': request.user.first_name,
-                    'telefone': request.user.telefone,
-                    'receber_sms': request.user.receber_sms,
-                    'receber_whatsapp': request.user.receber_whatsapp,
-                    'localizacao': location
-                }
-                
-                pest_data = {
-                    'nome': analysis_result['pest_detection']['pests_detected'][0]['name'],
-                    'confidence_score': analysis_result['pest_detection']['confidence'],
-                    'localizacao': location,
-                    'culturas_afetadas': [crop_type]
-                }
-                
-                # Enviar notificação via Twilio
-                twilio_service.send_pest_detection_alert(user_data, pest_data)
-            
-            analysis_result['detection_id'] = detection_record.id
+
+        # Se a análise indicar deteções, salvar registro corretamente mapeando
+        # para os campos atuais do modelo DeteccaoPraga e persistir a imagem
+        pests = analysis_result.get('pest_detection', {}).get('pests_detected', [])
+        confidence = analysis_result.get('pest_detection', {}).get('confidence')
+
+        if pests:
+            # Tentar resolver tipo de praga por nome (se houver)
+            top_name = pests[0].get('name') if isinstance(pests, list) and pests else None
+            praga_obj = None
+            if top_name:
+                praga_obj = TipoPraga.objects.filter(nome__iexact=top_name).first()
+
+            # Salvar imagem recebida (base64) em storage e anexar ao registro
+            saved_filename = None
+            decoded_bytes = None
+            try:
+                if isinstance(image_data, str):
+                    decoded_bytes = base64.b64decode(image_data)
+                    saved_filename = "deteccao_" + uuid.uuid4().hex[:12] + ".jpg"
+            except Exception as e:
+                logger.warning(f"Falha ao decodificar imagem enviada: {e}")
+
+            try:
+                detection = DeteccaoPraga(
+                    usuario=request.user,
+                    cultura=Cultura.objects.filter(nome__iexact=crop_type).first() if crop_type else None,
+                    resultado_ia=analysis_result,
+                    praga_detectada=praga_obj,
+                    confianca_deteccao=confidence,
+                    localizacao=location or 'Não especificado',
+                    observacoes_usuario=request.data.get('coordinates', '') or ''
+                )
+
+                # Se conseguimos decodificar a imagem, salve-a no campo ImageField
+                if saved_filename and decoded_bytes is not None:
+                    detection.imagem.save(saved_filename, ContentFile(decoded_bytes), save=False)
+
+                detection.save()
+
+                # Enviar notificação se confiança alta
+                if confidence and confidence > 0.7:
+                    user_data = {
+                        'first_name': request.user.first_name,
+                        'telefone': request.user.telefone,
+                        'receber_sms': request.user.receber_sms,
+                        'receber_whatsapp': request.user.receber_whatsapp,
+                        'localizacao': location
+                    }
+
+                    pest_data = {
+                        'nome': top_name,
+                        'confidence_score': confidence,
+                        'localizacao': location,
+                        'culturas_afetadas': [crop_type]
+                    }
+
+                    # Enviar notificação via Twilio
+                    twilio_service.send_pest_detection_alert(user_data, pest_data)
+
+                analysis_result['detection_id'] = detection.id
+            except Exception as e:
+                logger.error(f"Erro ao salvar DeteccaoPraga: {e}")
         
         return Response(analysis_result)
         

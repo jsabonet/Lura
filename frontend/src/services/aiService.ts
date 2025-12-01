@@ -22,6 +22,8 @@ export interface ChatMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   content_html?: string;
+  // URL da imagem associada (data URL ou remoto) para mensagens multimodais
+  imageUrl?: string;
   timestamp?: Date;
   truncated?: boolean;
 }

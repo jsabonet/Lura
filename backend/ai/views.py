@@ -242,6 +242,9 @@ class AIChatStreamView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # Detectar se há imagem no payload (campo separado para evitar limite de 8000 chars)
+        image_data = serializer.validated_data.get('image_data')
+        
         # Construir contexto do chat
         prompt_parts = []
 
@@ -288,7 +291,8 @@ class AIChatStreamView(APIView):
             try:
                 async for chunk in ai_service.generate_text_stream(
                     prompt=full_prompt,
-                    model_name=serializer.validated_data.get('model', 'gemini-pro')
+                    model_name=serializer.validated_data.get('model', 'gemini-pro'),
+                    image_data=image_data
                 ):
                     # Formato SSE: data: {json}\n\n
                     data = json.dumps(chunk, ensure_ascii=False)

@@ -531,6 +531,7 @@ export default function ChatbotPage() {
     const userMessage: ChatMessage = {
       role: 'user',
       content: trimmedInput,
+      imageUrl: imagePreview || undefined,
       timestamp: new Date()
     };
 
@@ -579,18 +580,34 @@ export default function ChatbotPage() {
       const MAX_HISTORY_MESSAGES = 12; // limitar o contexto enviado
       const MAX_MESSAGE_LENGTH = 7900; // margem de segurança abaixo de 8000
 
+      // Se houver imagem anexada, incluir na mensagem para análise multimodal direta
+      // O backend (Gemini Vision) processará a imagem inline
+      let imageContextText: string | null = null;
+
+      // Extrair imagem da última mensagem do usuário (se houver)
+      let imageToSend: string | null = null;
+      const lastUserMsg = [...newMessages].reverse().find(m => m.role === 'user');
+      if (lastUserMsg?.imageUrl) {
+        imageToSend = lastUserMsg.imageUrl;
+        console.log('📸 [IMAGE] Enviando imagem como campo separado para análise de visão multimodal');
+      }
+
       const historyForChat = newMessages
         .filter(m => m.content && m.content.trim().length > 0) // Remove placeholders vazios
         .slice(-MAX_HISTORY_MESSAGES)
-        .map(m => ({ 
-          role: m.role, 
-          content: m.content.length > MAX_MESSAGE_LENGTH 
-            ? m.content.slice(0, MAX_MESSAGE_LENGTH) 
-            : m.content 
-        }));
+        .map((m) => {
+          let content = m.content.length > MAX_MESSAGE_LENGTH ? m.content.slice(0, MAX_MESSAGE_LENGTH) : m.content;
+          return { role: m.role, content };
+        });
 
       // Fazer requisição SSE
   const token = localStorage.getItem('access_token');
+      
+      // Limpar imagem após adicionar aos dados (antes da requisição)
+      if (uploadedImage || imagePreview) {
+        removeImage();
+      }
+      
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/proxy/chat/stream/`, {
         method: 'POST',
         headers: {
@@ -598,7 +615,8 @@ export default function ChatbotPage() {
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          messages: historyForChat
+          messages: historyForChat,
+          ...(imageToSend ? { image_data: imageToSend } : {})
         }),
         // IMPORTANTE: Não definir timeout muito curto para streams longos
         signal: AbortSignal.timeout(120000) // 120 segundos (2 minutos)
@@ -801,9 +819,9 @@ export default function ChatbotPage() {
       }
 
       const systemPrompts: Record<Category, string> = {
-        pest: `Você é a Lura, uma especialista em controle de pragas e doenças agrícolas em Moçambique. Seu nome é Lura e você é uma assistente agrícola dedicada. Forneça identificação provável, diagnóstico, tratamentos (orgânicos e químicos), e prevenção. Seja prática e considere o contexto local. Quando apropriado, mencione que você é a Lura e está aqui para ajudar.`,
-        crop: `Você é a Lura, uma consultora agrícola especializada em recomendações de culturas para Moçambique. Seu nome é Lura e você é uma assistente agrícola experiente. Considere clima, solo, estação, mercado e viabilidade. Inclua calendário de plantio, cuidados e expectativas de produção. Quando apropriado, apresente-se como Lura.`,
-        general: `Você é a Lura, uma assistente agrícola especializada em Moçambique. Seu nome é Lura e você está aqui para ajudar agricultores com orientações práticas, claras e baseadas em boas práticas locais. Quando cumprimentada ou perguntada sobre seu nome, apresente-se como Lura. Seja amigável e profissional.`
+        pest: `Você é a Lura, uma especialista em controle de pragas e doenças agrícolas em Moçambique. Seu nome é Lura e você é uma assistente agrícola dedicada. Forneça identificação provável, diagnóstico, tratamentos (orgânicos e químicos), e prevenção. Seja prática e considere o contexto local. Nunca gere tabelas a menos que o usuário peça explicitamente; prefira listas com marcadores e passos numerados.`,
+        crop: `Você é a Lura, uma consultora agrícola especializada em recomendações de culturas para Moçambique. Seu nome é Lura e você é uma assistente agrícola experiente. Considere clima, solo, estação, mercado e viabilidade. Inclua calendário de plantio, cuidados e expectativas de produção. Nunca gere tabelas a menos que o usuário peça explicitamente; prefira listas claras.`,
+        general: `Você é a Lura, uma assistente agrícola especializada em Moçambique. Seu nome é Lura e você está aqui para ajudar agricultores com orientações práticas, claras e baseadas em boas práticas locais. Nunca gere tabelas a menos que o usuário peça explicitamente; prefira listas e parágrafos curtos.`
       };
 
       const historyForChat: ChatMessage[] = messages.slice(-12).map(m => ({ role: m.role, content: m.content }));
@@ -1002,9 +1020,9 @@ export default function ChatbotPage() {
       }
 
       const systemPrompts: Record<Category, string> = {
-        pest: `Você é a Lura, uma especialista em controle de pragas e doenças agrícolas em Moçambique. Seu nome é Lura e você é uma assistente agrícola dedicada. Forneça identificação provável, diagnóstico, tratamentos (orgânicos e químicos), e prevenção. Seja prática e considere o contexto local. Quando apropriado, mencione que você é a Lura e está aqui para ajudar.`,
-        crop: `Você é a Lura, uma consultora agrícola especializada em recomendações de culturas para Moçambique. Seu nome é Lura e você é uma assistente agrícola experiente. Considere clima, solo, estação, mercado e viabilidade. Inclua calendário de plantio, cuidados e expectativas de produção. Quando apropriado, apresente-se como Lura.`,
-        general: `Você é a Lura, uma assistente agrícola especializada em Moçambique. Seu nome é Lura e você está aqui para ajudar agricultores com orientações práticas, claras e baseadas em boas práticas locais. Quando cumprimentada ou perguntada sobre seu nome, apresente-se como Lura. Seja amigável e profissional.`
+        pest: `Você é a Lura, uma especialista em controle de pragas e doenças agrícolas em Moçambique. Seu nome é Lura e você é uma assistente agrícola dedicada. Forneça identificação provável, diagnóstico, tratamentos (orgânicos e químicos), e prevenção. Seja prática e considere o contexto local. Nunca gere tabelas a menos que o usuário peça explicitamente; prefira listas com marcadores e passos numerados.`,
+        crop: `Você é a Lura, uma consultora agrícola especializada em recomendações de culturas para Moçambique. Seu nome é Lura e você é uma assistente agrícola experiente. Considere clima, solo, estação, mercado e viabilidade. Inclua calendário de plantio, cuidados e expectativas de produção. Nunca gere tabelas a menos que o usuário peça explicitamente; prefira listas claras.`,
+        general: `Você é a Lura, uma assistente agrícola especializada em Moçambique. Seu nome é Lura e você está aqui para ajudar agricultores com orientações práticas, claras e baseadas em boas práticas locais. Nunca gere tabelas a menos que o usuário peça explicitamente; prefira listas e parágrafos curtos.`
       };
 
       const historyForChat: ChatMessage[] = newMessages.slice(-12).map(m => ({ role: m.role, content: m.content }));
@@ -1457,6 +1475,16 @@ export default function ChatbotPage() {
                             />
                           ) : (
                             <p className="text-sm md:text-[15px] leading-6 md:leading-7 whitespace-pre-wrap">{message.content}</p>
+                          )}
+                          {/* Exibir imagem associada à mensagem do usuário, se houver */}
+                          {message.role === 'user' && message.imageUrl && (
+                            <div className="mt-2">
+                              <img
+                                src={message.imageUrl}
+                                alt="Imagem enviada"
+                                className="max-h-60 rounded-xl border border-[#C2B280]/40 shadow-md object-contain"
+                              />
+                            </div>
                           )}
                         </>
                       )}

@@ -122,18 +122,26 @@ export function StreamingMessage({
           
           // Tabelas
           table: ({ node, ...props }) => (
-            <div className="overflow-x-auto mb-4 rounded-lg border border-[#00A86B]/30 shadow-lg">
-              <table className="min-w-full border-collapse" {...props} />
+            <div className="my-6 overflow-hidden rounded-xl border border-[#9BE38C]/30 shadow-xl shadow-[#1A5632]/10 bg-white">
+              <div className="overflow-x-auto">
+                <table className="w-full border-separate border-spacing-0" {...props} />
+              </div>
             </div>
           ),
-          thead: ({ node, ...props }) => <thead className="bg-gradient-to-r from-[#00A86B]/30 to-[#3BB273]/20" {...props} />,
-          tbody: ({ node, ...props }) => <tbody className="bg-[#1B2735]/30" {...props} />,
-          tr: ({ node, ...props }) => <tr className="border-b border-[#00A86B]/20 hover:bg-[#00A86B]/10 transition-colors duration-200" {...props} />,
+          thead: ({ node, ...props }) => (
+            <thead className="bg-gradient-to-r from-[#1A5632] via-[#2d7a4a] to-[#9BE38C]" {...props} />
+          ),
+          tbody: ({ node, ...props }) => (
+            <tbody className="bg-white" {...props} />
+          ),
+          tr: ({ node, ...props }) => (
+            <tr className="border-b border-[#9BE38C]/15 hover:bg-[#EAF7E6] transition-all duration-250" {...props} />
+          ),
           th: ({ node, ...props }) => (
-            <th className="px-4 py-3 text-left font-bold text-white border-r border-[#00A86B]/20 last:border-r-0" {...props} />
+            <th className="px-5 py-4 text-left font-bold text-white text-sm md:text-base border-r border-white/15 last:border-r-0 uppercase tracking-wider" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }} {...props} />
           ),
           td: ({ node, ...props }) => (
-            <td className="px-4 py-3 text-white border-r border-[#00A86B]/10 last:border-r-0" {...props} />
+            <td className="px-5 py-4 text-[#2d3748] font-normal text-sm md:text-base border-r border-[#9BE38C]/10 last:border-r-0 align-top leading-relaxed" {...props} />
           ),
         }}
       >

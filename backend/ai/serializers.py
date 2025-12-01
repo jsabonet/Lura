@@ -119,6 +119,7 @@ class AIProxyChatSerializer(serializers.Serializer):
         ),
         min_length=1
     )
+    image_data = serializers.CharField(required=False, allow_null=True, allow_blank=True, max_length=5000000)  # 5MB limit for base64 images
     
     def validate_messages(self, value):
         if not value:
