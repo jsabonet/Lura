@@ -1,290 +1,179 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { climaService, ClimaAtual, AlertaClimatico } from '@/services/clima';
-import WeatherWidget from '@/components/WeatherWidget';
-import Link from 'next/link';
+import WeatherWidget from '@/components/home/WeatherWidget';
+import TaskChecklist from '@/components/home/TaskChecklist';
+import AlertsCard from '@/components/home/AlertsCard';
+import { Sprout, TrendingUp, Droplets, Calendar } from 'lucide-react';
+import { getProjects } from '@/services/projectService';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWeather } from '@/hooks/useWeather';
+import type { Project } from '@/types/project';
 
 export default function Dashboard() {
-  const { user, isAuthenticated, loading } = useAuth();
-  const router = useRouter();
-  const [climaAtual, setClimaAtual] = useState<ClimaAtual | null>(null);
-  const [alertas, setAlertas] = useState<AlertaClimatico[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  const { user } = useAuth();
+  const { weatherData } = useWeather();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      router.push('/');
+    const token = localStorage.getItem('access_token');
+    if (!token) {
+      console.log('No access token found');
+      setLoading(false);
+      return;
     }
-  }, [isAuthenticated, loading, router]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Buscar clima atual
-        const climaResponse = await climaService.getClimaAtual('Maputo');
-        if (climaResponse.data) {
-          setClimaAtual(climaResponse.data);
-        }
+    console.log('Loading projects with token...');
+    getProjects(token)
+      .then((data) => {
+        console.log('Projects loaded:', data);
+        console.log('Is array?', Array.isArray(data));
+        console.log('Type:', typeof data);
+        // Garantir que sempre seja um array
+        setProjects(Array.isArray(data) ? data : []);
+      })
+      .catch((error) => {
+        console.error('Error loading projects:', error);
+        setProjects([]); // Garantir array vazio em caso de erro
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-        // Buscar alertas
-        const alertasResponse = await climaService.getAlertasClimaticos();
-        if (alertasResponse.data) {
-          setAlertas(alertasResponse.data.slice(0, 3)); // Apenas os 3 primeiros
-        }
-      } catch (error) {
-        console.error('Erro ao carregar dados:', error);
-      } finally {
-        setLoadingData(false);
-      }
-    };
+  // Calcular estatísticas reais dos projetos - SEM valores mock
+  const projetosAtivos = projects.length;
+  const diasProximaColheita = projects.length > 0
+    ? Math.min(...projects.map(p => p.dashboard?.dias_restantes ?? 0))
+    : null;
+  const saudeMedia = projects.length > 0
+    ? Math.round(projects.reduce((acc, p) => acc + (p.dashboard?.saude_score ?? 0), 0) / projects.length)
+    : null;
 
-    if (isAuthenticated) {
-      fetchData();
-    }
-  }, [isAuthenticated]);
+  // Nome real do usuário: prioriza "Nome Sobrenome", depois username, depois email
+  const usuarioNome = user?.first_name && user?.last_name
+    ? `${user.first_name} ${user.last_name}`
+    : (user?.first_name || user?.username || user?.email || 'Bem-vindo');
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900 dark:to-emerald-800 flex items-center justify-center">
-        <div className="text-green-800 dark:text-green-100">Carregando...</div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  // Construir stats apenas com dados reais disponíveis
+  const stats = [
+    { label: 'Projetos Ativos', value: String(projetosAtivos), icon: Sprout, color: 'from-[#00A86B] to-[#3BB273]', show: true },
+    ...(saudeMedia !== null ? [{ label: 'Saúde Média', value: `${saudeMedia}%`, icon: TrendingUp, color: 'from-[#F2C94C] to-[#F2A94C]', show: true }] : []),
+    ...(diasProximaColheita !== null ? [{ label: 'Dias até Colheita', value: String(diasProximaColheita), icon: Calendar, color: 'from-[#00A86B]/80 to-[#00A86B]', show: true }] : []),
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 dark:from-green-900 dark:to-emerald-800">
-      {/* Header */}
-      <header className="bg-white dark:bg-green-800 shadow-md">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="flex items-center space-x-2">
-              <div className="text-2xl">🌾</div>
-              <h1 className="text-2xl font-bold text-green-800 dark:text-green-100">
-                AgroAlerta
-              </h1>
-            </Link>
-            
-            <nav className="hidden md:flex space-x-6">
-              <Link href="/dashboard" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white font-medium">
-                Dashboard
-              </Link>
-              <Link href="/clima-novo" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white">
-                Clima
-              </Link>
-              <Link href="/pragas" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white">
-                Pragas
-              </Link>
-              <Link href="/mercado" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white">
-                Mercado
-              </Link>
-              <Link href="/chatbot" className="text-green-700 dark:text-green-200 hover:text-green-900 dark:hover:text-white">
-                Assistente
-              </Link>
-            </nav>
-
-            <div className="flex items-center space-x-4">
-              <span className="text-green-700 dark:text-green-200">
-                {user?.first_name || user?.username}
-              </span>
-              <Link
-                href="/perfil"
-                className="text-green-700 hover:text-green-900 dark:text-green-200 dark:hover:text-white"
-              >
-                Perfil
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-green-800 dark:text-green-100 mb-2">
-            Bem-vindo, {user?.first_name || user?.username}!
-          </h2>
-          <p className="text-green-600 dark:text-green-200">
-            Aqui está um resumo das informações mais importantes para sua propriedade.
-          </p>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Clima Moderno - Widget Integrado */}
-          <div className="md:col-span-2">
-            <WeatherWidget compact={true} />
-          </div>
-
-          {/* Alertas */}
-          <div className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-green-800 dark:text-green-100">
-                Alertas Ativos
-              </h3>
-              <div className="text-2xl">⚠️</div>
-            </div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              {alertas.length}
-            </div>
-            <div className="text-sm text-green-600 dark:text-green-200">
-              {alertas.length === 0 ? 'Nenhum alerta' : 'Alertas ativos'}
-            </div>
-          </div>
-
-          {/* Detecções Recentes */}
-          <div className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-green-800 dark:text-green-100">
-                Detecções
-              </h3>
-              <div className="text-2xl">🐛</div>
-            </div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              0
-            </div>
-            <div className="text-sm text-green-600 dark:text-green-200">
-              Esta semana
-            </div>
-          </div>
-
-          {/* Recomendações */}
-          <div className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-green-800 dark:text-green-100">
-                Recomendações
-              </h3>
-              <div className="text-2xl">💡</div>
-            </div>
-            <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-              3
-            </div>
-            <div className="text-sm text-green-600 dark:text-green-200">
-              Disponíveis
-            </div>
-          </div>
-        </div>
-
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Previsão do Tempo */}
-          <div className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-green-800 dark:text-green-100">
-                Previsão dos Próximos Dias
-              </h3>
-              <Link
-                href="/clima"
-                className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
-              >
-                Ver mais →
-              </Link>
-            </div>
-            <div className="text-green-600 dark:text-green-200">
-              Dados de previsão serão carregados aqui...
-            </div>
-          </div>
-
-          {/* Alertas Recentes */}
-          <div className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold text-green-800 dark:text-green-100">
-                Alertas Recentes
-              </h3>
-              <Link
-                href="/clima"
-                className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-200"
-              >
-                Ver todos →
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {alertas.length === 0 ? (
-                <div className="text-green-600 dark:text-green-200">
-                  Nenhum alerta ativo no momento
+    <div className="min-h-screen bg-gradient-to-b from-[#0F2027] via-[#1B2735] to-[#203A43] text-white pb-24 pt-0">
+      {/* Hero Header com Gradient */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#00A86B]/20 via-transparent to-[#F2C94C]/10 pointer-events-none" />
+        <div className="relative px-4 pt-8 pb-6">
+          {/* Saudação Premium */}
+          <div className="flex items-start justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#00A86B] to-[#3BB273] rounded-2xl flex items-center justify-center shadow-lg shadow-[#00A86B]/30">
+                <Sprout size={32} className="text-white" strokeWidth={2.5} />
+              </div>
+              <div>
+                <p className="text-white/50 text-sm font-medium">Bem-vindo de volta</p>
+                <h1 className="text-white text-3xl font-bold tracking-tight">{usuarioNome}</h1>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <p className="text-[#00A86B] text-sm font-medium">Agricultor Inteligente</p>
+                  {projects.length > 0 && (
+                    <span className="text-xs bg-[#00A86B]/20 text-[#00A86B] px-2 py-0.5 rounded-full border border-[#00A86B]/30">
+                      {projects.length} {projects.length === 1 ? 'Projeto' : 'Projetos'}
+                    </span>
+                  )}
                 </div>
-              ) : (
-                alertas.map((alerta) => (
-                  <div key={alerta.id} className="p-3 bg-yellow-50 dark:bg-yellow-900 rounded-md">
-                    <div className="font-medium text-yellow-800 dark:text-yellow-200">
-                      {alerta.titulo}
-                    </div>
-                    <div className="text-sm text-yellow-600 dark:text-yellow-300">
-                      {alerta.descricao}
-                    </div>
-                  </div>
-                ))
-              )}
+              </div>
             </div>
           </div>
+
+          {/* Stats Grid - Métricas Rápidas */}
+          {stats.length > 0 ? (
+            <div className={`grid gap-3 mb-6 ${stats.length === 3 ? 'grid-cols-3' : stats.length === 2 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+              {stats.map((stat, idx) => {
+                const Icon = stat.icon;
+                return (
+                  <div
+                    key={idx}
+                    className="bg-white/5 backdrop-blur-xl rounded-xl p-3 border border-white/10 hover:bg-white/10 transition-all duration-300 cursor-pointer hover:scale-105"
+                  >
+                    <div className={`w-8 h-8 bg-gradient-to-br ${stat.color} rounded-lg flex items-center justify-center mb-2`}>
+                      <Icon size={16} className="text-white" strokeWidth={2.5} />
+                    </div>
+                    <p className="text-white/60 text-xs mb-0.5">{stat.label}</p>
+                    <p className="text-white text-xl font-bold">{stat.value}</p>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {/* Mensagem quando não há projetos */}
+          {projetosAtivos === 0 && !loading && (
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 mb-6 text-center">
+              <div className="bg-[#00A86B]/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <Sprout size={32} className="text-[#00A86B]" strokeWidth={2} />
+              </div>
+              <h3 className="text-white font-bold text-lg mb-2">Comece sua Jornada</h3>
+              <p className="text-white/60 text-sm mb-4">
+                Você ainda não tem projetos. Crie seu primeiro campo para começar!
+              </p>
+              <a 
+                href="/novo-projeto"
+                className="inline-block bg-gradient-to-r from-[#00A86B] to-[#3BB273] text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-all duration-300"
+              >
+                + Criar Primeiro Projeto
+              </a>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Feed de Conteúdo com Espaçamento Profissional */}
+      <div className="px-4 space-y-5">
+        {/* Seção: Condições Climáticas */}
+        <div>
+          <h2 className="text-white/90 text-sm font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Droplets size={16} className="text-[#00A86B]" />
+            Condições Climáticas
+          </h2>
+          <WeatherWidget />
         </div>
 
-        {/* Quick Actions */}
-        <div className="mt-8">
-          <h3 className="text-xl font-semibold text-green-800 dark:text-green-100 mb-4">
-            Ações Rápidas
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link
-              href="/pragas"
-              className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-            >
-              <div className="text-3xl mb-2">📸</div>
-              <div className="font-semibold text-green-800 dark:text-green-100">
-                Detectar Praga
-              </div>
-              <div className="text-sm text-green-600 dark:text-green-200">
-                Envie uma foto
-              </div>
-            </Link>
-
-            <Link
-              href="/clima"
-              className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-            >
-              <div className="text-3xl mb-2">🌦️</div>
-              <div className="font-semibold text-green-800 dark:text-green-100">
-                Ver Previsão
-              </div>
-              <div className="text-sm text-green-600 dark:text-green-200">
-                7 dias
-              </div>
-            </Link>
-
-            <Link
-              href="/chatbot"
-              className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-            >
-              <div className="text-3xl mb-2">💬</div>
-              <div className="font-semibold text-green-800 dark:text-green-100">
-                Assistente
-              </div>
-              <div className="text-sm text-green-600 dark:text-green-200">
-                Tire dúvidas
-              </div>
-            </Link>
-
-            <Link
-              href="/mercado"
-              className="bg-white dark:bg-green-800 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center"
-            >
-              <div className="text-3xl mb-2">💰</div>
-              <div className="font-semibold text-green-800 dark:text-green-100">
-                Preços
-              </div>
-              <div className="text-sm text-green-600 dark:text-green-200">
-                Ver mercado
-              </div>
-            </Link>
-          </div>
+        {/* Seção: Tarefas Prioritárias */}
+        <div>
+          <h2 className="text-white/90 text-sm font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+            <Calendar size={16} className="text-[#F2C94C]" />
+            Tarefas Prioritárias
+          </h2>
+          <TaskChecklist projects={Array.isArray(projects) ? projects : []} loading={loading} />
         </div>
-      </main>
+
+        {/* Seção: Alertas e Insights */}
+        <div>
+          <h2 className="text-white/90 text-sm font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+            <TrendingUp size={16} className="text-[#00A86B]" />
+            Alertas e Insights
+          </h2>
+          <AlertsCard 
+            projects={Array.isArray(projects) ? projects : []} 
+            weatherData={weatherData}
+            loading={loading} 
+          />
+        </div>
+
+        {/* CTA Bottom - Ação Rápida */}
+        <div className="bg-gradient-to-r from-[#00A86B] to-[#3BB273] rounded-2xl p-6 text-center shadow-xl shadow-[#00A86B]/20">
+          <h3 className="text-white font-bold text-lg mb-2">Maximize sua Produção</h3>
+          <p className="text-white/80 text-sm mb-4">
+            Converse com a Lura IA para recomendações personalizadas
+          </p>
+          <button className="bg-white text-[#00A86B] px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-white/90 transition-all duration-300 shadow-lg hover:scale-105">
+            Iniciar Conversa
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

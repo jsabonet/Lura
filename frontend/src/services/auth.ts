@@ -56,7 +56,7 @@ export interface PerfilAgricultor {
 class AuthService {
   async loginRaw(username: string, password: string) {
     const res = await apiService.post<{ user?: any; access?: string; refresh?: string; message?: string; error?: string }>(
-      '/users/login/',
+      '/api/users/login/',
       { username, password }
     );
     if (res.data?.access) {
@@ -69,7 +69,7 @@ class AuthService {
   }
 
   async login(credentials: LoginCredentials) {
-    const response = await apiService.post<AuthTokens>('/users/login/', credentials);
+    const response = await apiService.post<AuthTokens>('/api/users/login/', credentials);
     
     if (response.data) {
       localStorage.setItem('access_token', response.data.access);
@@ -81,23 +81,23 @@ class AuthService {
 
   async register(userData: RegisterData) {
   // Backend expects `password_confirm` field; send data as-is
-  return apiService.post<User>('/users/register/', userData);
+  return apiService.post<User>('/api/users/register/', userData);
   }
 
   async getCurrentUser() {
-    return apiService.get<User>('/users/profile/');
+    return apiService.get<User>('/api/users/profile/');
   }
 
   async updateProfile(userData: Partial<User>) {
-    return apiService.put<User>('/users/profile/', userData);
+    return apiService.put<User>('/api/users/profile/', userData);
   }
 
   async getPerfilAgricultor() {
-    return apiService.get<PerfilAgricultor>('/users/perfil-agricultor/');
+    return apiService.get<PerfilAgricultor>('/api/users/perfil-agricultor/');
   }
 
   async updatePerfilAgricultor(perfilData: Partial<PerfilAgricultor>) {
-    return apiService.put<PerfilAgricultor>('/users/perfil-agricultor/', perfilData);
+    return apiService.put<PerfilAgricultor>('/api/users/perfil-agricultor/', perfilData);
   }
 
   async refreshToken() {
@@ -106,7 +106,7 @@ class AuthService {
       throw new Error('No refresh token available');
     }
 
-    const response = await apiService.post<{ access: string }>('/users/token/refresh/', {
+    const response = await apiService.post<{ access: string }>('/api/users/token/refresh/', {
       refresh: refreshToken,
     });
 

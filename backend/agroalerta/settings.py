@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'notificacoes',
     'triangulacao',  
     'ai',
+    'projetos',
 ]
 
 MIDDLEWARE = [
