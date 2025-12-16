@@ -8,8 +8,9 @@ import { isValidArray, formatDateBR, getSeverityColor } from '@/utils/helpers';
 import { LoadingPage } from '@/components/common/Loading';
 import ErrorDisplay from '@/components/common/ErrorDisplay';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function PragasPage() {
+function PragasPageContent() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -428,5 +429,13 @@ export default function PragasPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function PragasPage() {
+  return (
+    <ProtectedRoute>
+      <PragasPageContent />
+    </ProtectedRoute>
   );
 }

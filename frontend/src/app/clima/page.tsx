@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { LoadingPage } from '@/components/common/Loading';
 import { WeatherDashboard } from '@/components/WeatherDashboard';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
 // Importar apenas as funcionalidades dos novos sistemas
 import RegionalWeatherSystem from '@/components/RegionalWeatherSystem';
@@ -240,8 +241,10 @@ function ClimaPageContent() {
 
 export default function ClimaPage() {
   return (
-    <WeatherDataProvider>
-      <ClimaPageContent />
-    </WeatherDataProvider>
+    <ProtectedRoute>
+      <WeatherDataProvider>
+        <ClimaPageContent />
+      </WeatherDataProvider>
+    </ProtectedRoute>
   );
 }

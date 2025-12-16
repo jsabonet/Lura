@@ -2,11 +2,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, User, Mail, Phone, MapPin, Bell, Moon, Globe, LogOut, Shield, Sprout } from 'lucide-react';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { getProjects } from '@/services/projectService';
 import type { Project } from '@/types/project';
 
-export default function PerfilPage() {
+function PerfilPageContent() {
   const router = useRouter();
   const { user, logout } = useAuth();
   const [activeSection, setActiveSection] = useState('dados');
@@ -330,5 +331,13 @@ export default function PerfilPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function PerfilPage() {
+  return (
+    <ProtectedRoute>
+      <PerfilPageContent />
+    </ProtectedRoute>
   );
 }

@@ -4,8 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function MercadoPage() {
+function MercadoPageContent() {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
@@ -116,5 +117,13 @@ export default function MercadoPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function MercadoPage() {
+  return (
+    <ProtectedRoute>
+      <MercadoPageContent />
+    </ProtectedRoute>
   );
 }

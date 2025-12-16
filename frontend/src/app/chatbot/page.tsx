@@ -8,6 +8,7 @@ import {
   MessageSquare, ChevronLeft, ChevronRight, Image as ImageIcon, Copy,
   RotateCcw, User, CheckCheck, ArrowDown
 } from 'lucide-react';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { aiService, AIResponse, ChatMessage } from '../../services/aiService';
 import { useAuth } from '@/contexts/AuthContext';
 import { StreamingMessage } from '@/components/StreamingMessage';
@@ -20,7 +21,7 @@ interface Conversation {
   updatedAt: Date;
 }
 
-export default function ChatbotPage() {
+function ChatbotPageContent() {
   const router = useRouter();
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -1701,5 +1702,13 @@ export default function ChatbotPage() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function ChatbotPage() {
+  return (
+    <ProtectedRoute>
+      <ChatbotPageContent />
+    </ProtectedRoute>
   );
 }

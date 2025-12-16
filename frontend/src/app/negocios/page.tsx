@@ -1,7 +1,8 @@
 'use client';
 import { DollarSign, TrendingUp, Package, ShoppingBag, Calendar, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function NegociosPage() {
+function NegociosPageContent() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#0F2027] via-[#1B2735] to-[#203A43] pb-24">
       {/* Header Premium */}
@@ -120,5 +121,13 @@ export default function NegociosPage() {
       </div>
       </div>
     </main>
+  );
+}
+
+export default function NegociosPage() {
+  return (
+    <ProtectedRoute>
+      <NegociosPageContent />
+    </ProtectedRoute>
   );
 }

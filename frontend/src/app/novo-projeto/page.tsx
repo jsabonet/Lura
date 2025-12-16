@@ -2,9 +2,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { createProject } from '@/services/projectService';
 
-export default function NovoProjetoWizard() {
+function NovoProjetoWizardContent() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -46,6 +47,12 @@ export default function NovoProjetoWizard() {
     try {
       const token = localStorage.getItem('access_token');
       
+      if (!token) {
+        setError('Você precisa estar autenticado para criar um projeto.');
+        router.push('/login');
+        return;
+      }
+      
       const projectData = {
         nome: `${formData.cultura} ${new Date().getFullYear()}`,
         cultura: formData.cultura,
@@ -56,17 +63,15 @@ export default function NovoProjetoWizard() {
         status: 'planejamento',
       };
 
-      if (token) {
-        const project = await createProject(projectData, token);
-        router.push(`/campos/${project.id}`);
-      } else {
-        // Sem token: redirecionar para campos com mock data
-        console.log('Projeto criado (mock):', projectData);
-        router.push('/campos');
-      }
+      console.log('Criando projeto real no backend:', projectData);
+      const project = await createProject(projectData, token);
+      console.log('Projeto criado com sucesso:', project);
+      
+      // Redirecionar para o projeto específico criado
+      router.push(`/campos/${project.id}`);
     } catch (err) {
       console.error('Erro ao criar projeto:', err);
-      setError('Erro ao criar projeto. Tente novamente.');
+      setError(err instanceof Error ? err.message : 'Erro ao criar projeto. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -272,5 +277,13 @@ export default function NovoProjetoWizard() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function NovoProjetoWizard() {
+  return (
+    <ProtectedRoute>
+      <NovoProjetoWizardContent />
+    </ProtectedRoute>
   );
 }

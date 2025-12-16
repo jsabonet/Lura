@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { alertsService, AlertSubscription } from '@/services/alerts';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 
-export default function AlertasPage() {
+function AlertasPageContent() {
   const { isAuthenticated, loading } = useAuth();
   const [subs, setSubs] = useState<AlertSubscription[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -158,5 +159,13 @@ export default function AlertasPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AlertasPage() {
+  return (
+    <ProtectedRoute>
+      <AlertasPageContent />
+    </ProtectedRoute>
   );
 }

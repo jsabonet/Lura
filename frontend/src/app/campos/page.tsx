@@ -2,69 +2,43 @@
 import { useEffect, useState } from 'react';
 import { Plus, MapPin, TrendingUp, Sprout } from 'lucide-react';
 import Link from 'next/link';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { getProjects } from '@/services/projectService';
 
-export default function CamposPage() {
+function CamposContent() {
   const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
+    console.log('🚀 CamposContent - useEffect executado');
     const token = localStorage.getItem('access_token');
+    console.log('🔑 Token encontrado:', token ? `Sim (${token.substring(0, 20)}...)` : 'Não');
+    
     if (!token) {
+      console.log('❌ Token não encontrado - usuário não autenticado');
       setLoading(false);
       return;
     }
     
+    console.log('🔍 Chamando getProjects...');
     getProjects(token)
-      .then(setProjects)
-      .catch((error) => {
-        console.error('Error loading projects:', error);
+      .then((data) => {
+        console.log('✅ Callback then() - Projetos recebidos:', data);
+        console.log('� Setando projetos. Total:', data.length);
+        setProjects(data);
       })
-      .finally(() => setLoading(false));
+      .catch((error) => {
+        console.error('❌ Callback catch() - Erro ao carregar projetos:', error);
+        setError('Erro ao carregar projetos. Tente novamente.');
+      })
+      .finally(() => {
+        console.log('🏁 finally() - Loading concluído');
+        setLoading(false);
+      });
   }, []);
 
-  // Mock data para desenvolvimento sem auth
-  const mockProjects = [
-    {
-      id: 1,
-      nome: 'Milho 2025',
-      cultura: 'Milho',
-      area_hectares: 5,
-      foto_capa: null,
-      dashboard: {
-        progresso_percent: 45,
-        saude_score: 85,
-        dias_restantes: 45,
-        fase_atual: 'vegetativo',
-        proxima_atividade: 'Aplicação de fertilizante',
-        data_proxima_atividade: '2025-02-01',
-        total_custos: 2500.00,
-        custos_mes_atual: 450.00,
-        ultima_atualizacao: '2025-01-25T10:30:00Z',
-      },
-    },
-    {
-      id: 2,
-      nome: 'Tomate Orgânico',
-      cultura: 'Tomate',
-      area_hectares: 2,
-      foto_capa: null,
-      dashboard: {
-        progresso_percent: 75,
-        saude_score: 92,
-        dias_restantes: 12,
-        fase_atual: 'frutificacao',
-        proxima_atividade: 'Colheita parcial',
-        data_proxima_atividade: '2025-01-28',
-        total_custos: 1800.00,
-        custos_mes_atual: 320.00,
-        ultima_atualizacao: '2025-01-26T08:15:00Z',
-      },
-    },
-  ];
-
-  const displayProjects = projects.length > 0 ? projects : mockProjects;
-  const totalArea = displayProjects.reduce((sum, p) => sum + p.area_hectares, 0);
+  const totalArea = projects.reduce((sum, p) => sum + (parseFloat(p.area_hectares) || 0), 0);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#0F2027] via-[#1B2735] to-[#203A43] pb-24">
@@ -84,11 +58,11 @@ export default function CamposPage() {
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 border border-white/10">
             <p className="text-white/60 text-xs mb-1">Total de Campos</p>
-            <p className="text-white text-2xl font-bold">{displayProjects.length}</p>
+            <p className="text-white text-2xl font-bold">{projects.length}</p>
           </div>
           <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 border border-white/10">
             <p className="text-white/60 text-xs mb-1">Área Total</p>
-            <p className="text-white text-2xl font-bold">{totalArea} ha</p>
+            <p className="text-white text-2xl font-bold">{totalArea.toFixed(1)} ha</p>
           </div>
         </div>
       </div>
@@ -99,7 +73,20 @@ export default function CamposPage() {
         <div className="flex items-center justify-center py-20">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00A86B]"></div>
         </div>
-      ) : displayProjects.length === 0 ? (
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="bg-red-500/10 backdrop-blur rounded-full p-6 mb-4">
+            <p className="text-red-400 text-4xl">⚠️</p>
+          </div>
+          <p className="text-white/70 text-center mb-6">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="bg-gradient-to-r from-[#00A86B] to-[#3BB273] text-white px-6 py-3 rounded-xl font-bold"
+          >
+            Tentar Novamente
+          </button>
+        </div>
+      ) : projects.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20">
           <div className="bg-white/5 backdrop-blur rounded-full p-6 mb-4">
             <Plus size={48} className="text-[#00A86B]" strokeWidth={2} />
@@ -116,7 +103,7 @@ export default function CamposPage() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {displayProjects.map((project: any) => (
+          {projects.map((project: any) => (
             <Link key={project.id} href={`/campos/${project.id}`}>
               <div className="bg-white/5 backdrop-blur-xl rounded-2xl overflow-hidden hover:scale-[1.02] hover:bg-white/10 transition-all duration-300 border border-white/10 hover:border-[#00A86B]/30 shadow-xl hover:shadow-2xl">
                 {project.foto_capa ? (
@@ -179,5 +166,13 @@ export default function CamposPage() {
         </button>
       </Link>
     </main>
+  );
+}
+
+export default function CamposPage() {
+  return (
+    <ProtectedRoute>
+      <CamposContent />
+    </ProtectedRoute>
   );
 }

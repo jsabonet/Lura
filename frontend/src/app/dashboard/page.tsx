@@ -4,13 +4,14 @@ import { useEffect, useState } from 'react';
 import WeatherWidget from '@/components/home/WeatherWidget';
 import TaskChecklist from '@/components/home/TaskChecklist';
 import AlertsCard from '@/components/home/AlertsCard';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
 import { Sprout, TrendingUp, Droplets, Calendar } from 'lucide-react';
 import { getProjects } from '@/services/projectService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWeather } from '@/hooks/useWeather';
 import type { Project } from '@/types/project';
 
-export default function Dashboard() {
+function DashboardContent() {
   const { user } = useAuth();
   const { weatherData } = useWeather();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -175,5 +176,13 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
   );
 }

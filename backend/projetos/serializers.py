@@ -18,14 +18,18 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class FieldActivitySerializer(serializers.ModelSerializer):
-    fotos = serializers.SerializerMethodField()
+    fotos = serializers.SerializerMethodField(read_only=True)
     
     def get_fotos(self, obj):
-        return [foto.imagem.url for foto in obj.fotos.all()]
+        try:
+            return [{'id': foto.id, 'imagem': foto.imagem.url} for foto in obj.fotos.all()]
+        except:
+            return []
     
     class Meta:
         model = FieldActivity
         fields = '__all__'
+        read_only_fields = ['fotos']
 
 
 class CostTrackingSerializer(serializers.ModelSerializer):
@@ -38,4 +42,10 @@ class CostTrackingSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = CostTracking
+        fields = '__all__'
+
+
+class FieldPhotoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FieldPhoto
         fields = '__all__'
